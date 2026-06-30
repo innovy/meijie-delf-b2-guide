@@ -1,0 +1,32 @@
+{
+  "articles": [
+    {
+      "file": "content/01-overview.md",
+      "order": 1
+    },
+    {
+      "file": "content/02-format-scoring.md",
+      "order": 2
+    },
+    {
+      "file": "content/03-registration-day.md",
+      "order": 3
+    },
+    {
+      "file": "content/04-prep-roadmap.md",
+      "order": 4
+    },
+    {
+      "file": "content/05-writing.md",
+      "order": 5
+    },
+    {
+      "file": "content/06-speaking.md",
+      "order": 6
+    },
+    {
+      "file": "content/07-content-workflow.md",
+      "order": 7
+    }
+  ]
+}

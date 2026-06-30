@@ -1,0 +1,40 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "assets/uploads"
+public_folder: "/assets/uploads"
+
+collections:
+  - name: "articles"
+    label: "攻略文章"
+    label_singular: "攻略文章"
+    folder: "content"
+    create: true
+    extension: "md"
+    format: "frontmatter"
+    slug: "{{fields.slug}}"
+    summary: "{{title}}"
+    fields:
+      - { label: "标题", name: "title", widget: "string" }
+      - { label: "链接名", name: "slug", widget: "string", hint: "英文或拼音，建议用小写和连字符，例如 writing-roadmap。" }
+      - { label: "作者", name: "author", widget: "string", default: "妹姐" }
+      - label: "栏目"
+        name: "category"
+        widget: "select"
+        options:
+          - "考试认知"
+          - "考试流程"
+          - "备考策略"
+          - "专项突破"
+          - "站点管理"
+      - { label: "排序", name: "order", widget: "number", value_type: "int", default: 100, min: 1 }
+      - { label: "摘要", name: "summary", widget: "text", required: false, hint: "可留空。留空时，前台会根据正文第一段自动生成。" }
+      - { label: "标签", name: "tags", widget: "list", required: false, hint: "可留空。留空时，前台会根据标题、栏目和正文关键词自动生成。" }
+      - { label: "别名/双链关键词", name: "aliases", widget: "list", required: false, hint: "例如：写作、Production écrite。正文里写 [[写作]] 时会自动链接。" }
+      - label: "正文"
+        name: "body"
+        widget: "markdown"
+        modes: ["rich_text", "raw"]
+        default_mode: "rich_text"
+        hint: "可以用工具栏插入标题、列表、链接和图片。图片会上传到 assets/uploads。"

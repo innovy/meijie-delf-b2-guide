@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>妹姐的DELF B2超级攻略 | 一站式备考知识库</title>
+    <meta
+      name="description"
+      content="面向法语学习者和 DELF B2 备考者的一站式考试内容、流程与备考知识库。"
+    >
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="topbar">
+        <button class="menu-button" id="menuButton" type="button" aria-label="打开目录" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <a class="brand" href="#delf-b2-overview" aria-label="返回首页">
+          <img class="brand-mark" src="assets/brand/meijie-logo.png" alt="妹姐 logo">
+          <span>
+            <strong>妹姐的DELF B2超级攻略</strong>
+            <small>Guide DELF B2</small>
+          </span>
+        </a>
+
+        <div class="top-actions">
+          <div class="search-wrap">
+            <label class="sr-only" for="siteSearch">搜索文章</label>
+            <input id="siteSearch" type="search" placeholder="搜索考试流程、写作、口语..." autocomplete="off">
+            <div class="search-results" id="searchResults" hidden></div>
+          </div>
+
+          <div class="social-actions" aria-label="联系和关注">
+            <button class="social-button" type="button" disabled title="公众号入口预留">公众号</button>
+            <button class="social-button" type="button" disabled title="小程序入口预留">小程序</button>
+            <button class="social-button" type="button" disabled title="小红书入口预留">小红书</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="layout">
+        <aside class="sidebar" id="sidebar" aria-label="Sommaire">
+          <div class="sidebar-inner">
+            <div class="author-card">
+              <div class="author-photo">
+                <img src="assets/brand/meijie-avatar.jpg" alt="妹姐头像">
+                <button class="social-button primary author-wechat-button" id="wechatButton" type="button" aria-expanded="false" aria-controls="wechatPopover">
+                  加微信
+                </button>
+              </div>
+              <div class="author-info">
+                <strong>妹姐老师</strong>
+                <span>DALF C2 95分</span>
+                <span>巴黎索邦大学语言学硕士</span>
+                <span>12年帮助2000+学员通过B2/C1/C2</span>
+              </div>
+              <div class="wechat-popover" id="wechatPopover" hidden>
+                <button class="popover-close" id="wechatClose" type="button" aria-label="关闭微信二维码">×</button>
+                <div class="wechat-profile">
+                  <img src="assets/brand/meijie-avatar.jpg" alt="妹姐头像">
+                  <div>
+                    <strong>添加妹姐微信</strong>
+                    <span>微信号：meijie_fr</span>
+                  </div>
+                </div>
+                <img class="wechat-qr" src="assets/brand/wechat-qr.jpg" alt="妹姐微信二维码">
+              </div>
+            </div>
+            <div class="sidebar-title">Sommaire</div>
+            <nav id="articleNav"></nav>
+          </div>
+        </aside>
+
+        <main class="content-area">
+          <article class="article" id="article">
+            <div class="loading">正在整理知识库...</div>
+          </article>
+        </main>
+      </div>
+    </div>
+
+    <div class="scrim" id="scrim" hidden></div>
+    <script src="scripts.js"></script>
+  </body>
+</html>
