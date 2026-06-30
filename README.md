@@ -8,94 +8,122 @@ pinned: false
 
 # 妹姐的DELF B2超级攻略
 
-这是一个面向法语学习者和 DELF B2 备考者的百科式知识库原型。前台是静态网页，后台预留了 Decap CMS，适合老师用可视化方式维护文章和图片。
+这是一个面向法语学习者和 DELF B2 备考者的百科式知识库。前台读取 `content/data.json`，后台是定制管理台，不再使用 Decap CMS。
 
 ## 本地预览
 
-在这个文件夹里运行：
-
 ```bash
+cd "/Users/meijie/Codex/展示网站开放"
 python3 -m http.server 8080
 ```
 
-然后打开：
+打开：
 
 ```text
-http://localhost:8080
+http://127.0.0.1:8080
 ```
 
-## 推荐后台
-
-Hugging Face Static HTML 适合测试展示，但不适合作为日常内容后台。想要可视化新增、编辑、上传图片，建议用：
+后台本地预览：
 
 ```text
-GitHub + Netlify + Decap CMS
+http://127.0.0.1:8080/admin/
+```
+
+本地后台可以编辑和下载 `data.json`，但不能直接保存到 GitHub。线上保存需要 Netlify Functions。
+
+## 新后台能做什么
+
+- 编辑作者卡：姓名、头像、三行简介、微信号、二维码。
+- 管理栏目：新增、删除、改名、拖动排序。
+- 管理文章：新增、复制、删除、换栏目、排序、编辑正文。
+- 飞书粘贴整理：把飞书内容粘贴到后台，自动识别标题、摘要、标签和正文结构。
+- 富媒体编辑：插入标题、列表、引用、双链、外链、图片，并实时预览。若粘贴内容里带 base64 图片，后台会转为待上传图片资源；若飞书只提供权限图片链接，请用“插图”按钮上传原图。
+- 保存到线上：通过 Netlify Function 写回 GitHub 的 `content/data.json`。
+
+## Netlify 环境变量
+
+在 Netlify 项目里进入：
+
+```text
+Site configuration → Environment variables
+```
+
+添加：
+
+```text
+ADMIN_PASSWORD=你自己设置的后台密码
+GITHUB_REPO=你的GitHub用户名/仓库名
+GITHUB_BRANCH=main
+GITHUB_TOKEN=你的GitHub fine-grained token
+```
+
+`GITHUB_TOKEN` 需要允许该仓库的 Contents 读写权限。
+
+## GitHub Token 权限
+
+在 GitHub 创建 Fine-grained personal access token：
+
+- Repository access：只选择这个项目仓库。
+- Permissions → Contents：Read and write。
+
+创建后复制 token，放到 Netlify 的 `GITHUB_TOKEN` 环境变量。
+
+## 部署设置
+
+Netlify 项目应从 GitHub 仓库导入。`netlify.toml` 已经配置：
+
+```toml
+[build]
+  publish = "."
+  functions = "netlify/functions"
 ```
 
 部署后访问：
 
 ```text
-https://你的域名/admin/
+https://你的站点.netlify.app/
+https://你的站点.netlify.app/admin/
 ```
 
-就能进入内容后台。
+## 这次必须上传的文件
 
-## Netlify 后台配置步骤
-
-1. 注册 GitHub，把这个项目上传到一个仓库。
-2. 注册 Netlify，选择 Add new site，然后从 GitHub 导入这个仓库。
-3. 构建设置保持：
-   - Build command: `python3 build.py`
-   - Publish directory: `.`
-4. 部署成功后，进入 Netlify 的 Identity 设置并启用 Identity。
-5. 把 Registration 设置成 Invite only。
-6. 在 Identity 的 Services 里启用 Git Gateway。
-7. 邀请自己的邮箱，按邮件完成注册。
-8. 打开 `https://你的域名/admin/`，登录后编辑文章。
-
-## 在后台怎么加图片
-
-在 `/admin/` 的正文编辑器里，点击图片/媒体按钮，上传本地图片或从媒体库选择。图片会保存到：
+如果你在 GitHub 网页里手动上传，建议整包覆盖。至少要确认这些文件已经在 GitHub 仓库里：
 
 ```text
-assets/uploads/
+index.html
+scripts.js
+styles.css
+content/data.json
+admin/index.html
+admin/admin.css
+admin/admin.js
+netlify.toml
+netlify/functions/save-content.js
+assets/brand/meijie-logo.png
+assets/brand/meijie-avatar.jpg
+assets/brand/wechat-qr.jpg
+assets/uploads/.gitkeep
 ```
 
-不需要手写 Markdown 图片语法。
+如果 `/admin/` 打开后不是“自定义内容后台”，通常就是 `admin/index.html`、`admin/admin.js` 或 `admin/admin.css` 没传上去。
 
-## 手工内容更新备用方案
+## 内容文件
 
-如果暂时不用后台，也可以直接改 `content/` 文件夹里的 `.md` 文件。新增文章后运行：
+核心内容在：
 
-```bash
-python3 build.py
+```text
+content/data.json
 ```
 
-它会自动重新生成 `content/articles.json`，前台左侧目录就能读到新文章。
+旧的 Markdown 文件仍保留为历史素材，但前台和新后台不再依赖它们。
 
-## 双向链接怎么写
+## 保存失败排查
 
-```markdown
-[[写作]]
-[[考试结构与评分]]
-[[口语|B2口语表达]]
-```
+后台提示保存失败时，按顺序检查：
 
-页面底部会自动显示反向链接。
-
-## 音频和视频预留
-
-```markdown
-::media{type="audio" src="assets/listening-sample.mp3" caption="听力片段示例"}
-::media{type="video" src="assets/oral-demo.mp4" caption="口语示范视频"}
-```
-
-## 部署建议
-
-[Hugging Face Static HTML Spaces](https://huggingface.co/docs/hub/spaces-sdks-static) 可以测试这个版本。创建 Space 时选择 Static HTML，把本文件夹里的内容上传即可；README 顶部已经包含 `sdk: static`。
-
-正式运营时，建议考虑：
-
-- 静态网站 + [Decap CMS](https://decapcms.org/docs/intro/)：低门槛，有网页编辑器，内容仍可作为文件保存。
-- Sanity / Strapi / Directus：更像真正后台，适合多人协作、图片/音频/视频字段和微信小程序 API。
-- Netlify / Vercel / Cloudflare Pages：更适合长期网站部署和绑定域名。
+1. Netlify 是否已经重新部署最新代码。
+2. `ADMIN_PASSWORD` 是否和后台输入的一致。
+3. `GITHUB_REPO` 是否是 `用户名/仓库名`，例如 `meijie/meijie-delf-b2-guide`。
+4. `GITHUB_BRANCH` 是否和 GitHub 默认分支一致，通常是 `main`。
+5. `GITHUB_TOKEN` 是否是 fine-grained token，并且给了该仓库 Contents: Read and write 权限。
+6. Netlify 的 Functions 日志里是否有 GitHub API 报错。

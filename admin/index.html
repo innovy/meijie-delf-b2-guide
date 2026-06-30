@@ -3,10 +3,203 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>内容后台 | 妹姐的DELF B2超级攻略</title>
-    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <title>自定义内容后台 | 妹姐的DELF B2超级攻略</title>
+    <link rel="stylesheet" href="admin.css">
   </head>
   <body>
-    <script src="https://unpkg.com/decap-cms@^3.8.0/dist/decap-cms.js"></script>
+    <div class="admin-shell">
+      <aside class="admin-sidebar">
+        <div class="admin-brand">
+          <img id="adminLogo" src="../assets/brand/meijie-logo.png" alt="logo">
+          <div>
+            <strong>内容后台</strong>
+            <span>妹姐的 DELF B2 超级攻略</span>
+          </div>
+        </div>
+
+        <section class="panel connection-panel">
+          <h2>保存设置</h2>
+          <label>
+            后台密码
+            <input id="adminPassword" type="password" placeholder="Netlify 环境变量 ADMIN_PASSWORD">
+          </label>
+          <button class="primary full" id="saveAllButton" type="button">保存到线上</button>
+          <button class="ghost full" id="downloadButton" type="button">下载 data.json 备用</button>
+          <p id="saveStatus" class="hint">本地预览时无法直接写回 GitHub；线上部署后可保存。</p>
+        </section>
+
+        <nav class="admin-tabs" aria-label="后台模块">
+          <button class="tab active" type="button" data-tab="articles">文章</button>
+          <button class="tab" type="button" data-tab="categories">栏目</button>
+          <button class="tab" type="button" data-tab="site">作者卡/站点</button>
+        </nav>
+
+        <section class="panel article-list-panel">
+          <div class="section-head">
+            <h2>文章列表</h2>
+            <button id="newArticleButton" type="button">新增</button>
+          </div>
+          <div id="articleList" class="article-list"></div>
+        </section>
+      </aside>
+
+      <main class="admin-main">
+        <section class="workspace active" id="workspace-articles">
+          <div class="workspace-head">
+            <div>
+              <p class="eyebrow">Article Editor</p>
+              <h1 id="editorTitle">文章编辑</h1>
+            </div>
+            <div class="head-actions">
+              <button id="duplicateArticleButton" type="button">复制文章</button>
+              <button class="danger" id="deleteArticleButton" type="button">删除文章</button>
+            </div>
+          </div>
+
+          <div class="editor-grid">
+            <section class="panel">
+              <h2>飞书粘贴整理</h2>
+              <p class="hint">从飞书复制整页内容，粘贴到下方。点击“智能整理”后，会自动识别标题、摘要、标签、正文结构。</p>
+              <div id="pasteBox" class="paste-box" contenteditable="true" data-placeholder="在这里粘贴飞书文档内容..."></div>
+              <div class="inline-actions">
+                <button class="primary" id="parsePasteButton" type="button">智能整理成文章</button>
+                <button id="appendPasteButton" type="button">追加到正文</button>
+                <button id="clearPasteButton" type="button">清空粘贴区</button>
+              </div>
+            </section>
+
+            <section class="panel">
+              <h2>文章信息</h2>
+              <div class="form-grid">
+                <label>
+                  标题
+                  <input id="articleTitle" type="text">
+                </label>
+                <label>
+                  栏目
+                  <select id="articleCategory"></select>
+                </label>
+                <label>
+                  排序
+                  <input id="articleOrder" type="number" min="1">
+                </label>
+                <label>
+                  网址后缀
+                  <input id="articleSlug" type="text" placeholder="可自动生成">
+                </label>
+              </div>
+              <label>
+                摘要
+                <textarea id="articleSummary" rows="3" placeholder="可自动生成"></textarea>
+              </label>
+              <div class="form-grid">
+                <label>
+                  标签，逗号分隔
+                  <input id="articleTags" type="text">
+                </label>
+                <label>
+                  双链别名，逗号分隔
+                  <input id="articleAliases" type="text">
+                </label>
+              </div>
+              <div class="inline-actions">
+                <button id="regenMetaButton" type="button">重新生成摘要/标签</button>
+                <button id="slugifyButton" type="button">根据标题生成网址后缀</button>
+              </div>
+            </section>
+          </div>
+
+          <section class="panel">
+            <div class="section-head">
+              <h2>正文编辑</h2>
+              <div class="toolbar">
+                <button type="button" data-insert="## ">H2</button>
+                <button type="button" data-insert="### ">H3</button>
+                <button type="button" data-wrap="**">加粗</button>
+                <button type="button" data-line="- ">列表</button>
+                <button type="button" data-line="> ">引用</button>
+                <button type="button" id="wikiButton">双链</button>
+                <button type="button" id="linkButton">链接</button>
+                <label class="file-button">
+                  插图
+                  <input id="imageInput" type="file" accept="image/*">
+                </label>
+              </div>
+            </div>
+            <div class="body-grid">
+              <textarea id="articleBody" rows="24" spellcheck="false"></textarea>
+              <article id="articlePreview" class="preview"></article>
+            </div>
+          </section>
+        </section>
+
+        <section class="workspace" id="workspace-categories">
+          <div class="workspace-head">
+            <div>
+              <p class="eyebrow">Categories</p>
+              <h1>栏目管理</h1>
+            </div>
+            <button class="primary" id="newCategoryButton" type="button">新增栏目</button>
+          </div>
+          <p class="hint">可拖动排序，也可以直接改排序数字。文章编辑页里的栏目下拉会自动跟随这里。</p>
+          <div id="categoryList" class="sortable-list"></div>
+        </section>
+
+        <section class="workspace" id="workspace-site">
+          <div class="workspace-head">
+            <div>
+              <p class="eyebrow">Site & Author</p>
+              <h1>作者卡和站点信息</h1>
+            </div>
+          </div>
+          <div class="editor-grid">
+            <section class="panel">
+              <h2>站点</h2>
+              <label>
+                网站标题
+                <input id="siteTitle" type="text">
+              </label>
+              <label>
+                副标题
+                <input id="siteSubtitle" type="text">
+              </label>
+              <label>
+                搜索框提示
+                <input id="siteSearchPlaceholder" type="text">
+              </label>
+              <label>
+                Logo 路径
+                <input id="siteLogo" type="text">
+              </label>
+            </section>
+            <section class="panel">
+              <h2>作者卡</h2>
+              <label>
+                作者姓名
+                <input id="authorName" type="text">
+              </label>
+              <label>
+                头像路径
+                <input id="authorAvatar" type="text">
+              </label>
+              <label>
+                简介，每行一条
+                <textarea id="authorBio" rows="4"></textarea>
+              </label>
+              <label>
+                微信号
+                <input id="authorWechatId" type="text">
+              </label>
+              <label>
+                微信二维码路径
+                <input id="authorWechatQr" type="text">
+              </label>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="admin.js"></script>
   </body>
 </html>
