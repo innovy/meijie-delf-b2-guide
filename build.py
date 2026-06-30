@@ -6,6 +6,8 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 CONTENT_DIR = ROOT / "content"
 INDEX_FILE = CONTENT_DIR / "articles.json"
+CATEGORY_DIR = CONTENT_DIR / "categories"
+CATEGORY_INDEX_FILE = CONTENT_DIR / "categories.json"
 
 
 def parse_frontmatter(text):
@@ -63,3 +65,24 @@ INDEX_FILE.write_text(
 )
 
 print(f"Generated {INDEX_FILE} with {len(articles)} articles.")
+
+categories = []
+if CATEGORY_DIR.exists():
+    for fallback, path in enumerate(sorted(CATEGORY_DIR.glob("*.md")), start=1000):
+        meta = parse_frontmatter(path.read_text(encoding="utf-8"))
+        title = meta.get("title") or path.stem
+        categories.append(
+            {
+                "title": title,
+                "slug": meta.get("slug") or path.stem,
+                "order": order_value(meta, fallback),
+            }
+        )
+
+categories.sort(key=lambda item: (item["order"], item["title"]))
+CATEGORY_INDEX_FILE.write_text(
+    json.dumps({"categories": categories}, ensure_ascii=False, indent=2) + "\n",
+    encoding="utf-8",
+)
+
+print(f"Generated {CATEGORY_INDEX_FILE} with {len(categories)} categories.")

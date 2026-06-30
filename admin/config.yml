@@ -6,6 +6,21 @@ media_folder: "assets/uploads"
 public_folder: "/assets/uploads"
 
 collections:
+  - name: "categories"
+    label: "栏目管理"
+    label_singular: "栏目"
+    folder: "content/categories"
+    create: true
+    extension: "md"
+    format: "frontmatter"
+    slug: "{{fields.order}}-{{fields.slug}}"
+    summary: "{{order}} · {{title}}"
+    sortable_fields: ["order", "title"]
+    fields:
+      - { label: "栏目名", name: "title", widget: "string" }
+      - { label: "网址后缀", name: "slug", widget: "string", hint: "英文或拼音，用小写和连字符，例如 exam-basics。" }
+      - { label: "栏目排序", name: "order", widget: "number", value_type: "int", default: 100, min: 1, hint: "数字越小，左侧目录越靠前。" }
+
   - name: "articles"
     label: "攻略文章"
     label_singular: "攻略文章"
@@ -13,21 +28,27 @@ collections:
     create: true
     extension: "md"
     format: "frontmatter"
-    slug: "{{fields.slug}}"
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     summary: "{{title}}"
+    sortable_fields: ["order", "title", "category", "author"]
+    view_groups:
+      - label: "按栏目查看"
+        field: "category"
+    view_filters:
+      - label: "未写摘要"
+        field: "summary"
+        pattern: "^$"
     fields:
       - { label: "标题", name: "title", widget: "string" }
-      - { label: "链接名", name: "slug", widget: "string", hint: "英文或拼音，建议用小写和连字符，例如 writing-roadmap。" }
+      - { label: "网址后缀（高级，可不填）", name: "slug", widget: "string", required: false, hint: "控制文章网址 # 后面的名字，例如 writing-roadmap。留空时，网站会根据文件名自动生成。发布后尽量不要频繁修改。" }
       - { label: "作者", name: "author", widget: "string", default: "妹姐" }
       - label: "栏目"
         name: "category"
-        widget: "select"
-        options:
-          - "考试认知"
-          - "考试流程"
-          - "备考策略"
-          - "专项突破"
-          - "站点管理"
+        widget: "relation"
+        collection: "categories"
+        search_fields: ["title", "slug"]
+        value_field: "title"
+        display_fields: ["title"]
       - { label: "排序", name: "order", widget: "number", value_type: "int", default: 100, min: 1 }
       - { label: "摘要", name: "summary", widget: "text", required: false, hint: "可留空。留空时，前台会根据正文第一段自动生成。" }
       - { label: "标签", name: "tags", widget: "list", required: false, hint: "可留空。留空时，前台会根据标题、栏目和正文关键词自动生成。" }
@@ -37,4 +58,6 @@ collections:
         widget: "markdown"
         modes: ["rich_text", "raw"]
         default_mode: "rich_text"
-        hint: "可以用工具栏插入标题、列表、链接和图片。图片会上传到 assets/uploads。"
+        buttons: ["bold", "italic", "code", "link", "heading-one", "heading-two", "heading-three", "quote", "bulleted-list", "numbered-list"]
+        editor_components: ["image"]
+        hint: "可以从飞书粘贴正文，也可以用工具栏插入标题、列表、链接和图片。图片会上传到 assets/uploads。"

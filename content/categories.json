@@ -1,0 +1,29 @@
+{
+  "categories": [
+    {
+      "title": "考试认知",
+      "slug": "exam-basics",
+      "order": 1
+    },
+    {
+      "title": "考试流程",
+      "slug": "process",
+      "order": 2
+    },
+    {
+      "title": "备考策略",
+      "slug": "strategy",
+      "order": 3
+    },
+    {
+      "title": "专项突破",
+      "slug": "skills",
+      "order": 4
+    },
+    {
+      "title": "站点管理",
+      "slug": "site-management",
+      "order": 5
+    }
+  ]
+}

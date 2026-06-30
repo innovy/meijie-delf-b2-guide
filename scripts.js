@@ -1,5 +1,6 @@
 const state = {
   articles: [],
+  categories: [],
   articleMap: new Map(),
   titleMap: new Map(),
   currentSlug: "",
@@ -36,7 +37,10 @@ init();
 
 async function init() {
   try {
-    const index = await fetchJson("content/articles.json");
+    const [index, categoryIndex] = await Promise.all([
+      fetchJson("content/articles.json"),
+      fetchOptionalJson("content/categories.json"),
+    ]);
     const loaded = await Promise.all(
       index.articles.map(async (item) => {
         const markdown = await fetchText(item.file);
@@ -51,6 +55,7 @@ async function init() {
       })
     );
 
+    state.categories = (categoryIndex?.categories || []).sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
     state.articles = loaded
       .map(enrichArticle)
       .sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
@@ -66,6 +71,12 @@ async function init() {
 async function fetchJson(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`${url} ${response.status}`);
+  return response.json();
+}
+
+async function fetchOptionalJson(url) {
+  const response = await fetch(url);
+  if (!response.ok) return null;
   return response.json();
 }
 
@@ -88,6 +99,7 @@ function enrichArticle(article) {
   const aliases = normalizeList(article.aliases);
   return {
     ...article,
+    slug: article.slug || slugFromFile(article.file) || slugify(article.title || "article"),
     author: article.author || "妹姐",
     aliases,
     summary: article.summary || generateSummary(article.body),
@@ -144,8 +156,15 @@ function renderNav() {
     groups.get(category).push(article);
   });
 
-  els.nav.innerHTML = [...groups.entries()]
-    .map(([category, articles]) => {
+  const knownCategories = state.categories.map((category) => category.title).filter(Boolean);
+  const orderedCategories = [
+    ...knownCategories.filter((category) => groups.has(category)),
+    ...[...groups.keys()].filter((category) => !knownCategories.includes(category)),
+  ];
+
+  els.nav.innerHTML = orderedCategories
+    .map((category) => {
+      const articles = groups.get(category) || [];
       const links = articles
         .map((article) => `<a class="nav-link" href="#${article.slug}" data-slug="${article.slug}">${escapeHtml(article.title)}</a>`)
         .join("");
@@ -288,7 +307,10 @@ function parseFrontmatter(markdown) {
   rawMeta.split("\n").forEach((line) => {
     const listItem = line.match(/^\s*-\s+(.+)$/);
     if (listItem && currentListKey) {
-      meta[currentListKey].push(listItem[1].trim().replace(/^["']|["']$/g, ""));
+      if (!Array.isArray(meta[currentListKey])) {
+        meta[currentListKey] = normalizeList(meta[currentListKey]);
+      }
+      meta[currentListKey].push(parseMetaValue(listItem[1].trim()));
       return;
     }
 
@@ -304,10 +326,10 @@ function parseFrontmatter(markdown) {
       value = value
         .slice(1, -1)
         .split(",")
-        .map((item) => item.trim().replace(/^["']|["']$/g, ""))
+        .map((item) => parseMetaValue(item.trim()))
         .filter(Boolean);
     } else {
-      value = value.replace(/^["']|["']$/g, "");
+      value = parseMetaValue(value);
     }
     meta[key] = value;
   });
@@ -317,10 +339,33 @@ function parseFrontmatter(markdown) {
   return { meta, body };
 }
 
+function parseMetaValue(value) {
+  const trimmed = String(value || "").trim();
+  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
 function normalizeList(value) {
   if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
   if (typeof value === "string") return value.split(",").map((item) => item.trim()).filter(Boolean);
   return [];
+}
+
+function slugFromFile(file) {
+  return String(file || "")
+    .split("/")
+    .pop()
+    ?.replace(/\.[^.]+$/, "");
+}
+
+function slugify(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
+    .replace(/^-+|-+$/g, "") || "article";
 }
 
 function generateSummary(markdown) {
