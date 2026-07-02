@@ -1,3 +1,14 @@
 [build]
+  command = "python3 build.py"
   publish = "."
   functions = "netlify/functions"
+
+[[redirects]]
+  from = "/netlify/*"
+  to = "/"
+  status = 404
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

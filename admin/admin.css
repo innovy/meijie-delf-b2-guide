@@ -184,6 +184,30 @@ label + .form-grid {
   color: var(--ink);
 }
 
+.status-message {
+  border-radius: 8px;
+  padding: 9px 10px;
+}
+
+.status-info {
+  background: var(--soft);
+}
+
+.status-ok {
+  background: #edf8f0;
+  color: #176b35;
+}
+
+.status-warn {
+  background: #fff7e6;
+  color: #7a4b00;
+}
+
+.status-error {
+  background: #fff0f1;
+  color: var(--danger);
+}
+
 .setup-help {
   margin: 12px 0;
   border: 1px solid #ffd5d8;
@@ -203,6 +227,81 @@ label + .form-grid {
 
 .setup-help p {
   margin: 8px 0 0;
+}
+
+.setup-report {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft);
+  padding: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.setup-report[hidden] {
+  display: none;
+}
+
+.setup-report > strong {
+  font-size: 14px;
+}
+
+.setup-report p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.setup-report ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.setup-report li {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 8px;
+  border-radius: 7px;
+  background: var(--white);
+  padding: 9px;
+}
+
+.setup-report li > span {
+  align-self: start;
+  border-radius: 999px;
+  padding: 2px 6px;
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.setup-report li.pass > span {
+  background: #218a45;
+}
+
+.setup-report li.warn > span {
+  background: #bd7600;
+}
+
+.setup-report li.fail > span {
+  background: var(--danger);
+}
+
+.setup-report li strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.setup-report .fix {
+  margin-top: 4px;
+  color: var(--ink);
+  font-weight: 700;
 }
 
 .admin-tabs {

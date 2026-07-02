@@ -3,27 +3,32 @@
     {
       "title": "考试认知",
       "slug": "exam-basics",
-      "order": 1
+      "order": 1,
+      "file": "content/categories/01-exam-basics.md"
     },
     {
       "title": "考试流程",
       "slug": "process",
-      "order": 2
+      "order": 2,
+      "file": "content/categories/02-process.md"
     },
     {
       "title": "备考策略",
       "slug": "strategy",
-      "order": 3
+      "order": 3,
+      "file": "content/categories/03-strategy.md"
     },
     {
       "title": "专项突破",
       "slug": "skills",
-      "order": 4
+      "order": 4,
+      "file": "content/categories/04-skills.md"
     },
     {
       "title": "站点管理",
       "slug": "site-management",
-      "order": 5
+      "order": 5,
+      "file": "content/categories/05-site-management.md"
     }
   ]
 }

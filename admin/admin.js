@@ -91,6 +91,7 @@ const $$ = (selector) => [...document.querySelectorAll(selector)];
 const fields = {
   password: $("#adminPassword"),
   saveStatus: $("#saveStatus"),
+  setupReport: $("#setupReport"),
   articleList: $("#articleList"),
   categoryList: $("#categoryList"),
   articleTitle: $("#articleTitle"),
@@ -123,13 +124,13 @@ async function init() {
 }
 
 async function loadData() {
-  setStatus("正在读取内容...");
+  setStatus("正在读取由 Markdown 生成的内容数据...");
   const response = await fetch("../content/data.json", { cache: "no-store" });
   state.data = await response.json();
   normalizeData();
   state.selectedArticleId = state.data.articles[0]?.id || "";
   renderAll();
-  setStatus("内容已加载。");
+  setStatus("内容已加载：Markdown 是源文件，data.json 是前台发布文件。首次上线后建议先点“检查保存链路”。", "ok");
 }
 
 function normalizeData() {
@@ -137,6 +138,7 @@ function normalizeData() {
     id: category.id || slugify(category.title || `category-${index + 1}`),
     title: category.title || "未命名栏目",
     order: Number(category.order || index + 1),
+    sourceFile: category.sourceFile || "",
   }));
   state.data.articles = (state.data.articles || []).map((article, index) => ({
     id: article.id || article.slug || crypto.randomUUID(),
@@ -149,6 +151,7 @@ function normalizeData() {
     tags: normalizeList(article.tags),
     aliases: normalizeList(article.aliases),
     body: article.body || "",
+    sourceFile: article.sourceFile || "",
   }));
   sortData();
 }
@@ -169,6 +172,7 @@ function bindEvents() {
   ["#saveAllButton", "#saveTopButton", "#saveBodyButton"].forEach((selector) => {
     $(selector)?.addEventListener("click", saveAll);
   });
+  $("#checkSetupButton")?.addEventListener("click", checkSetup);
   $("#downloadButton").addEventListener("click", () => downloadJson("data.json", collectData()));
   $("#newArticleButton").addEventListener("click", newArticle);
   $("#duplicateArticleButton").addEventListener("click", duplicateArticle);
@@ -204,6 +208,7 @@ function bindEvents() {
   fields.password.addEventListener("input", () => {
     fields.password.classList.remove("needs-attention");
     sessionStorage.setItem("meijieAdminPassword", fields.password.value);
+    clearSetupReport();
   });
   window.addEventListener("beforeunload", (event) => {
     if (!state.dirty) return;
@@ -386,6 +391,7 @@ function duplicateArticle() {
   copy.title = `${copy.title} 副本`;
   copy.slug = uniqueArticleSlug(smartSlug(copy.title), copy.id);
   copy.order = getNextOrder(state.data.articles.filter((item) => item.categoryId === copy.categoryId));
+  copy.sourceFile = "";
   state.data.articles.push(copy);
   state.selectedArticleId = copy.id;
   markDirty();
@@ -509,10 +515,11 @@ function parsePastedContent(html, text) {
 }
 
 function extractDataUrlImages(markdown) {
-  return String(markdown || "").replace(/!\[(.*?)\]\((data:image\/([a-zA-Z0-9.+-]+);base64,([^)]+))\)/g, (_, alt, _src, ext, base64) => {
-    const safeExt = ext === "jpeg" ? "jpg" : ext;
+  return String(markdown || "").replace(/!\[(.*?)\]\((data:image\/([a-zA-Z0-9.+-]+);base64,([^)]+))\)/g, (match, alt, _src, ext, base64) => {
+    const safeExt = normalizeImageExtension(ext);
+    if (!safeExt) return match;
     const path = `assets/uploads/pasted-${Date.now()}-${state.pendingAssets.length + 1}.${safeExt}`;
-    state.pendingAssets.push({ path, contentBase64: base64 });
+    state.pendingAssets.push({ path, contentBase64: base64.replace(/\s+/g, "") });
     return `![${alt || "粘贴图片"}](${path})`;
   });
 }
@@ -692,7 +699,13 @@ function insertExternalLink() {
 async function handleImageInput(event) {
   const file = event.target.files?.[0];
   if (!file) return;
-  const safeName = `${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "-")}`;
+  const extension = normalizeImageExtension(file.name.split(".").pop() || file.type.split("/").pop());
+  if (!extension) {
+    alert("目前插图只支持 jpg、png、gif、webp。请先把图片转成这些格式再上传。");
+    event.target.value = "";
+    return;
+  }
+  const safeName = `${Date.now()}-${safeUploadName(file.name, extension)}`;
   const path = `assets/uploads/${safeName}`;
   const dataUrl = await fileToDataUrl(file);
   const base64 = dataUrl.split(",")[1];
@@ -700,6 +713,24 @@ async function handleImageInput(event) {
   insertAtCursor(`![${file.name}](${path})`);
   markDirty();
   event.target.value = "";
+}
+
+function normalizeImageExtension(value) {
+  const extension = String(value || "").toLowerCase().replace(/^x-/, "");
+  if (extension === "jpeg" || extension === "jpg") return "jpg";
+  if (["png", "gif", "webp"].includes(extension)) return extension;
+  return "";
+}
+
+function safeUploadName(filename, extension) {
+  const base = String(filename || "image")
+    .replace(/\.[^.]+$/, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w.-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "image";
+  return `${base}.${extension}`;
 }
 
 function fileToDataUrl(file) {
@@ -907,17 +938,39 @@ function makeHeadingId(slug, text, index) {
   return `${slug || "preview"}-${slugify(text) || "section"}-${index}`;
 }
 
-async function saveAll() {
-  const password = fields.password.value.trim();
-  if (!password) {
-    fields.password.classList.add("needs-attention");
-    fields.password.focus();
-    $(".setup-help")?.setAttribute("open", "");
-    setStatus("请先填写后台密码：这个密码需要你在 Netlify 的 ADMIN_PASSWORD 环境变量里自己设置。");
-    return;
+async function checkSetup() {
+  const password = requirePasswordForRemoteAction();
+  if (!password) return;
+
+  setCheckingState(true);
+  setStatus("正在检查 Netlify 环境变量和 GitHub 仓库...", "info");
+  clearSetupReport();
+
+  try {
+    const response = await fetch("/.netlify/functions/save-content", {
+      method: "GET",
+      headers: {
+        "x-admin-password": password,
+      },
+      cache: "no-store",
+    });
+    const result = await readApiResponse(response);
+    renderSetupReport(result);
+    if (!response.ok) throw new Error(result.error || result.message || "体检没有通过");
+    setStatus(result.message || "体检通过：可以保存到 GitHub。", "ok");
+  } catch (error) {
+    setStatus(`体检失败：${friendlyNetworkError(error.message)}。`, "error");
+  } finally {
+    setCheckingState(false);
   }
+}
+
+async function saveAll() {
+  const password = requirePasswordForRemoteAction();
+  if (!password) return;
+
   setSavingState(true);
-  setStatus("正在保存到 GitHub，请不要关闭页面...");
+  setStatus("正在同步 Markdown 源文件和前台数据，请不要关闭页面...", "info");
   try {
     const response = await fetch("/.netlify/functions/save-content", {
       method: "POST",
@@ -927,13 +980,14 @@ async function saveAll() {
       },
       body: JSON.stringify({ data: collectData(), assets: state.pendingAssets }),
     });
-    const result = await response.json();
+    const result = await readApiResponse(response);
+    renderSetupReport(result);
     if (!response.ok) throw new Error(result.error || "保存失败");
     state.pendingAssets = [];
     state.dirty = false;
-    setStatus(`保存成功：${result.message || "已提交到 GitHub"}`);
+    setStatus(`保存成功：${result.message || "已提交到 GitHub"}`, "ok");
   } catch (error) {
-    setStatus(`保存失败：${error.message}。请先检查 Netlify 的 ADMIN_PASSWORD、GITHUB_TOKEN、GITHUB_REPO、GITHUB_BRANCH 是否都已配置；也可以先下载 data.json 备用。`);
+    setStatus(`保存失败：${friendlyNetworkError(error.message)} 请按上方体检结果修改；也可以先下载 data.json 备用。`, "error");
   } finally {
     setSavingState(false);
   }
@@ -944,8 +998,94 @@ function setSavingState(isSaving) {
     const button = $(selector);
     if (!button) return;
     button.disabled = isSaving;
-    button.textContent = isSaving ? "保存中..." : (selector === "#saveAllButton" ? "保存/上传到线上" : "保存/上传");
+    button.textContent = isSaving ? "保存中..." : (selector === "#saveAllButton" ? "保存 Markdown 源" : "保存 Markdown");
   });
+}
+
+function setCheckingState(isChecking) {
+  const button = $("#checkSetupButton");
+  if (!button) return;
+  button.disabled = isChecking;
+  button.textContent = isChecking ? "检查中..." : "检查保存链路";
+}
+
+function requirePasswordForRemoteAction() {
+  const password = fields.password.value.trim();
+  if (password) return password;
+  fields.password.classList.add("needs-attention");
+  fields.password.focus();
+  $(".setup-help")?.setAttribute("open", "");
+  setStatus("请先填写后台密码：这个密码需要你在 Netlify 的 ADMIN_PASSWORD 环境变量里自己设置。", "error");
+  return "";
+}
+
+async function readApiResponse(response) {
+  const text = await response.text();
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch (error) {
+    return {
+      ok: false,
+      error: response.status === 404
+        ? "没有找到 Netlify Function。请确认已经部署到 Netlify，且 netlify.toml 和 netlify/functions/save-content.js 已上传。"
+        : `服务器返回了非 JSON 内容：${text.slice(0, 120)}`,
+    };
+  }
+}
+
+function renderSetupReport(result) {
+  if (!fields.setupReport) return;
+  const checks = Array.isArray(result?.checks) ? result.checks : [];
+  if (!checks.length) {
+    clearSetupReport();
+    return;
+  }
+
+  fields.setupReport.hidden = false;
+  fields.setupReport.innerHTML = `
+    <strong>${escapeHtml(result.title || (result.ok ? "体检结果" : "需要处理"))}</strong>
+    ${result.config ? `<p>目标仓库：${escapeHtml(result.config.repo || "未填写")} / 分支：${escapeHtml(result.config.branch || "未填写")}</p>` : ""}
+    <ul>
+      ${checks.map(renderSetupCheck).join("")}
+    </ul>
+  `;
+}
+
+function renderSetupCheck(check) {
+  const statusText = { pass: "通过", warn: "提醒", fail: "失败" }[check.status] || "提示";
+  return `
+    <li class="${escapeAttr(check.status || "info")}">
+      <span>${statusText}</span>
+      <div>
+        <strong>${escapeHtml(check.name || "检查项")}</strong>
+        <p>${escapeHtml(check.detail || "")}</p>
+        ${check.fix ? `<p class="fix">${escapeHtml(check.fix)}</p>` : ""}
+      </div>
+    </li>
+  `;
+}
+
+function clearSetupReport() {
+  if (!fields.setupReport) return;
+  fields.setupReport.hidden = true;
+  fields.setupReport.innerHTML = "";
+}
+
+function friendlyNetworkError(message) {
+  const text = String(message || "请求失败。");
+  if (text.includes("Only POST is allowed")) {
+    return "线上 Netlify Function 还是旧版本。请先把本机最新版项目上传到 GitHub，然后在 Netlify 的 Deploys 里重新部署一次；新版函数支持“检查保存链路”和“保存 Markdown”。";
+  }
+  if (text.includes("这里只接受 GET 体检和 POST 保存请求")) {
+    return "保存接口收到了异常请求。请刷新 /admin/ 后重试；如果仍出现，说明线上前端和函数版本不一致，需要重新部署。";
+  }
+  if (text.includes("Failed to fetch") || text.includes("Load failed") || text.includes("NetworkError")) {
+    if (location.hostname === "127.0.0.1" || location.hostname === "localhost") {
+      return "本地普通预览不能运行 Netlify Functions。部署到 Netlify 后再体检；本地写 Markdown 时运行 python3 build.py 同步前台数据。";
+    }
+    return "浏览器连不上 Netlify Function。请刷新页面后重试，或查看 Netlify Functions 日志。";
+  }
+  return text;
 }
 
 function regenerateMeta() {
@@ -985,7 +1125,7 @@ function downloadJson(filename, data) {
 function markDirty() {
   if (state.isRendering) return;
   state.dirty = true;
-  setStatus("有未保存改动。记得保存到线上，或下载 data.json 备用。");
+  setStatus("有未保存改动。记得保存 Markdown 源，或下载 data.json 备用。", "warn");
 }
 
 function getSelectedArticle() {
@@ -1141,8 +1281,10 @@ function slugify(value) {
     .replace(/^-+|-+$/g, "") || `item-${Date.now()}`;
 }
 
-function setStatus(message) {
+function setStatus(message, tone = "info") {
   fields.saveStatus.textContent = message;
+  fields.saveStatus.classList.remove("status-ok", "status-warn", "status-error", "status-info");
+  fields.saveStatus.classList.add(`status-${tone}`);
 }
 
 function escapeHtml(value) {

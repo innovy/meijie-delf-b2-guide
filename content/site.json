@@ -1,0 +1,38 @@
+{
+  "title": "妹姐的DELF B2超级攻略",
+  "subtitle": "Guide DELF B2",
+  "logo": "assets/brand/meijie-logo.png",
+  "searchPlaceholder": "搜索考试流程、写作、口语...",
+  "authorCard": {
+    "name": "妹姐老师",
+    "avatar": "assets/brand/meijie-avatar.jpg",
+    "bio": [
+      "DALF C2 95分",
+      "巴黎索邦大学语言学硕士",
+      "12年帮助2000+学员通过B2/C1/C2"
+    ],
+    "wechatId": "meijie_fr",
+    "wechatQr": "assets/brand/wechat-qr.jpg",
+    "wechatButtonText": "加微信"
+  },
+  "socials": [
+    {
+      "id": "wechat-official",
+      "label": "公众号",
+      "url": "",
+      "enabled": false
+    },
+    {
+      "id": "mini-program",
+      "label": "小程序",
+      "url": "",
+      "enabled": false
+    },
+    {
+      "id": "xiaohongshu",
+      "label": "小红书",
+      "url": "",
+      "enabled": false
+    }
+  ]
+}

@@ -23,15 +23,18 @@
             后台密码
             <input id="adminPassword" type="password" placeholder="Netlify 环境变量 ADMIN_PASSWORD">
           </label>
-          <p class="hint">这个密码需要你自己在 Netlify 里设置。设置名叫 <strong>ADMIN_PASSWORD</strong>，这里填写同一个密码。</p>
+          <p class="hint">这个密码需要你自己在 Netlify 里设置。保存时会同步 Markdown 源文件，并生成前台读取的 data.json。</p>
           <details class="setup-help">
-            <summary>密码从哪里设置？</summary>
-            <p>进入 Netlify 项目后，找到 Site configuration → Environment variables，新增 <strong>ADMIN_PASSWORD</strong>。它不是邮箱密码，也不是 GitHub 密码。</p>
-            <p>同时还需要配置 <strong>GITHUB_TOKEN</strong>、<strong>GITHUB_REPO</strong>、<strong>GITHUB_BRANCH</strong>，保存按钮才能把内容写回 GitHub。</p>
+            <summary>第一次上线前要填什么？</summary>
+            <p>进入 Netlify 项目后，找到 Site configuration → Environment variables，新增 <strong>ADMIN_PASSWORD</strong>、<strong>GITHUB_TOKEN</strong>、<strong>GITHUB_REPO</strong>、<strong>GITHUB_BRANCH</strong>。</p>
+            <p><strong>ADMIN_PASSWORD</strong> 是你自己设置的后台密码，不是邮箱密码，也不是 GitHub 密码。<strong>GITHUB_REPO</strong> 只填“用户名/仓库名”，不要填完整网址。</p>
+            <p>首次部署保护默认开启：保存前必须先在目标仓库找到 <strong>content/data.json</strong>，避免误写到空仓库或错仓库。保存成功后会同步 Markdown 源文件、<strong>content/site.json</strong> 和生成 JSON。</p>
           </details>
-          <button class="primary full" id="saveAllButton" type="button">保存/上传到线上</button>
+          <button class="ghost full" id="checkSetupButton" type="button">检查保存链路</button>
+          <button class="primary full" id="saveAllButton" type="button">保存 Markdown 源</button>
           <button class="ghost full" id="downloadButton" type="button">下载 data.json 备用</button>
-          <p id="saveStatus" class="hint">线上 /admin/ 可以保存到 GitHub；本机预览建议先下载 data.json 备用。</p>
+          <div id="setupReport" class="setup-report" hidden></div>
+          <p id="saveStatus" class="hint status-message">线上 /admin/ 可以保存到 GitHub；首次上线后先点“检查保存链路”。本机写 Markdown 后运行构建脚本即可同步前台数据。</p>
         </section>
 
         <nav class="admin-tabs" aria-label="后台模块">
@@ -57,7 +60,7 @@
               <h1 id="editorTitle">文章编辑</h1>
             </div>
             <div class="head-actions">
-              <button class="primary" id="saveTopButton" type="button">保存/上传</button>
+              <button class="primary" id="saveTopButton" type="button">保存 Markdown</button>
               <button id="duplicateArticleButton" type="button">复制文章</button>
               <button class="danger" id="deleteArticleButton" type="button">删除文章</button>
             </div>
@@ -130,9 +133,9 @@
                 <button type="button" id="linkButton">链接</button>
                 <label class="file-button">
                   插图
-                  <input id="imageInput" type="file" accept="image/*">
+                  <input id="imageInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
                 </label>
-                <button class="primary" id="saveBodyButton" type="button">保存/上传</button>
+                <button class="primary" id="saveBodyButton" type="button">保存 Markdown</button>
               </div>
             </div>
             <div class="template-toolbar" aria-label="常用排版模板">

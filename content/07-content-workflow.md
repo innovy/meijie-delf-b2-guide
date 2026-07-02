@@ -4,16 +4,41 @@ slug: content-workflow
 author: "妹姐"
 category: "站点管理"
 order: 7
-summary: "给老师维护内容用的说明：在哪里编辑内容、怎么可视化插入图片、Hugging Face 和正式后台分别适合什么。"
+summary: "给老师维护内容用的说明：Markdown 源文件、后台保存、图片和部署之间怎么保持同步。"
 tags: [后台, CMS, 图片, 部署, 飞书]
 aliases: [内容更新, 后台方案, Markdown, 图片]
 ---
 
 ## 先说结论
 
-这个项目已经改为自定义后台，不再使用 Decap CMS。前台和后台都围绕 `content/data.json` 工作：作者卡、栏目、文章、排序、标签、摘要和正文都存在同一份结构化数据里。
+这个项目现在采用“Markdown 是源文件，`content/data.json` 是发布文件”的内容流。
 
-部署到 Netlify 后，访问 `/admin/` 就能进入后台。线上保存通过 Netlify Function 写回 GitHub。
+- 文章写在 `content/*.md`。
+- 栏目写在 `content/categories/*.md`。
+- 作者卡和站点信息写在 `content/site.json`。
+- 前台和后台读取 `content/data.json`，但它由 `python3 build.py` 自动生成，不建议手动改。
+
+部署到 Netlify 后，访问 `/admin/` 就能进入后台。线上保存通过 Netlify Function 写回 GitHub：它会把后台里的内容反写成 Markdown，同步生成 `data.json`，并把图片上传到 `assets/uploads/`。
+
+## 两种可靠更新方式
+
+第一种：继续手写 Markdown。
+
+```bash
+python3 build.py
+```
+
+运行后会刷新 `content/data.json`、`content/articles.json` 和 `content/categories.json`。Netlify 部署时也会自动运行这一步，所以前台总是按 Markdown 源文件生成。
+
+第二种：用后台可视化编辑。
+
+1. 打开 `/admin/`。
+2. 修改文章、栏目或作者卡。
+3. 第一次上线后，先点击“检查保存链路”。
+4. 体检通过后，点击“保存 Markdown 源”。
+5. 后台会一次性提交 Markdown 源文件、`content/site.json`、生成 JSON 和新增图片。
+
+这两种方式最终都会回到同一批源文件，所以不会出现“Markdown 一套、data.json 另一套”的漂移。
 
 ## 从飞书内容迁移
 
@@ -27,7 +52,7 @@ aliases: [内容更新, 后台方案, Markdown, 图片]
 
 ## 图片怎么可视化添加
 
-后台正文工具栏里有“插图”按钮。选择本地图片后，后台会自动插入图片语法，并在保存时把图片上传到 `assets/uploads/`。
+后台正文工具栏里有“插图”按钮。选择本地图片后，后台会自动插入图片语法，并在保存时把图片上传到 `assets/uploads/`，同时把正文保存回对应的 Markdown 文件。
 
 如果以后文章图片非常多，可以再升级到 Sanity、Strapi 或 Directus，这类后台更适合做图片库、音频、视频和小程序 API。
 
@@ -61,10 +86,25 @@ MVP 暂时不放音视频，但已经预留了写法：
 1. 把项目上传到 GitHub。
 2. 用 Netlify 从 GitHub 导入这个仓库。
 3. 在 Netlify 的 Environment variables 里配置 `ADMIN_PASSWORD`、`GITHUB_REPO`、`GITHUB_BRANCH`、`GITHUB_TOKEN`。
-4. 打开 `你的网址/admin/`。
-5. 输入后台密码，编辑内容。
-6. 点击“保存到线上”，后台会把 `content/data.json` 提交回 GitHub。
-7. Netlify 监听到 GitHub 更新后会自动重新部署，前台页面会更新。
+4. 填完环境变量后，在 Netlify 里重新部署一次。
+5. 打开 `你的网址/admin/`。
+6. 输入后台密码，先点“检查保存链路”。
+7. 体检通过后再编辑内容，点击“保存 Markdown 源”。
+8. Netlify 监听到 GitHub 更新后会自动重新部署，并再次从 Markdown 生成前台数据。
+
+## 上线保存自检
+
+后台左侧的“检查保存链路”会看这些地方：
+
+- `ADMIN_PASSWORD` 是否已经设置，后台输入是否一致。
+- `GITHUB_REPO` 是否是 `用户名/仓库名`，不是完整网址。
+- `GITHUB_BRANCH` 是否存在，通常是 `main`。
+- GitHub Token 是否能读取这个仓库。
+- `content/data.json`、`content/site.json` 和 `build.py` 是否已经在目标仓库里。
+
+首次部署保护默认开启：如果目标仓库里找不到 `content/data.json`，后台会拒绝保存，防止误写到空仓库或错仓库。只有确认就是第一次创建内容文件时，才临时在 Netlify 设置 `ALLOW_FIRST_SAVE_CREATE=true`；创建成功后建议删掉这个变量。
+
+如果保存时提示 403，通常是 GitHub Token 没有给 Contents: Read and write，或者 Token 的 Repository access 没选中这个仓库。
 
 ## 自动摘要、标签和本文目录
 
@@ -87,6 +127,8 @@ MVP 暂时不放音视频，但已经预留了写法：
 “网址后缀”就是文章地址里 `#` 后面的唯一名字，例如 `#writing`。它的作用是让文章链接稳定，方便双向链接和外部分享。普通编辑时可以留空；发布后如果已经有人收藏或引用这篇文章，就不要频繁修改。
 
 自定义后台已经支持拖动栏目和文章排序。飞书粘贴整理是实用版：可以自动识别标题、正文、摘要、标签；飞书里的复杂表格、数据库、评论和权限内容仍建议在后台里二次检查。
+
+保存后，排序会写进 Markdown front matter 里的 `order` 字段；栏目归属会写进文章 front matter 里的 `categoryId` 字段。以后即使只看 Markdown，也能知道每篇文章属于哪个栏目、排在第几位。
 
 ## “这些文章也提到本主题”是什么意思
 

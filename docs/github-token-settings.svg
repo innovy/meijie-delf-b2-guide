@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="880" viewBox="0 0 1200 880">
+  <rect width="1200" height="880" fill="#f6f7f9"/>
+  <rect x="70" y="55" width="1060" height="770" rx="24" fill="#fff" stroke="#dfe3ea" stroke-width="3"/>
+  <text x="110" y="120" fill="#111827" font-size="38" font-family="Arial, Helvetica, sans-serif" font-weight="700">GitHub：生成 GITHUB_TOKEN 时这样选</text>
+  <text x="110" y="158" fill="#6b7280" font-size="21" font-family="Arial, Helvetica, sans-serif">路径：头像 → Settings → Developer settings → Personal access tokens → Fine-grained tokens</text>
+  <rect x="110" y="205" width="980" height="92" rx="16" fill="#f9fafb" stroke="#dfe3ea" stroke-width="2"/>
+  <text x="142" y="244" fill="#374151" font-size="23" font-family="Arial, Helvetica, sans-serif" font-weight="700">Token name</text>
+  <text x="380" y="244" fill="#111827" font-size="25" font-family="Arial, Helvetica, sans-serif">netlify-delf-b2-admin</text>
+  <text x="142" y="278" fill="#6b7280" font-size="20" font-family="Arial, Helvetica, sans-serif">名字随便，但建议写得能看懂。</text>
+  <rect x="110" y="325" width="980" height="92" rx="16" fill="#f9fafb" stroke="#dfe3ea" stroke-width="2"/>
+  <text x="142" y="364" fill="#374151" font-size="23" font-family="Arial, Helvetica, sans-serif" font-weight="700">Expiration</text>
+  <text x="380" y="364" fill="#111827" font-size="25" font-family="Arial, Helvetica, sans-serif">90 days / 1 year 都可以</text>
+  <text x="142" y="398" fill="#6b7280" font-size="20" font-family="Arial, Helvetica, sans-serif">到期后如果后台保存失败，再重新生成一个 token。</text>
+  <rect x="110" y="445" width="980" height="112" rx="16" fill="#fff5f5" stroke="#fa2d30" stroke-width="4"/>
+  <text x="142" y="486" fill="#b9151a" font-size="24" font-family="Arial, Helvetica, sans-serif" font-weight="700">Repository access</text>
+  <text x="430" y="486" fill="#111827" font-size="26" font-family="Arial, Helvetica, sans-serif" font-weight="700">Only select repositories</text>
+  <text x="142" y="523" fill="#374151" font-size="21" font-family="Arial, Helvetica, sans-serif">然后选择这个网站对应的 GitHub 仓库。</text>
+  <rect x="110" y="590" width="980" height="120" rx="16" fill="#fff5f5" stroke="#fa2d30" stroke-width="4"/>
+  <text x="142" y="633" fill="#b9151a" font-size="24" font-family="Arial, Helvetica, sans-serif" font-weight="700">Repository permissions</text>
+  <text x="142" y="672" fill="#111827" font-size="28" font-family="Arial, Helvetica, sans-serif" font-weight="700">Contents → Read and write</text>
+  <text x="142" y="702" fill="#6b7280" font-size="19" font-family="Arial, Helvetica, sans-serif">这是后台能写入 content/data.json 的关键权限。</text>
+  <rect x="110" y="745" width="980" height="52" rx="13" fill="#111827"/>
+  <text x="142" y="778" fill="#fff" font-size="22" font-family="Arial, Helvetica, sans-serif" font-weight="700">点 Generate token 后，立刻复制 github_pat_...，粘贴到 Netlify 的 GITHUB_TOKEN。</text>
+</svg>
