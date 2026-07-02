@@ -10,6 +10,70 @@ const TAG_RULES = [
   { tag: "后台", patterns: ["后台", "CMS", "Netlify", "GitHub", "图片", "飞书"] },
 ];
 
+const SLUG_KEYWORDS = [
+  ["delf b2", "delf-b2"],
+  ["dalf c2", "dalf-c2"],
+  ["delf", "delf"],
+  ["dalf", "dalf"],
+  ["b2", "b2"],
+  ["c1", "c1"],
+  ["c2", "c2"],
+  ["报名与考试当天流程", "registration-day"],
+  ["考试结构与评分", "format-scoring"],
+  ["备考路线图", "prep-roadmap"],
+  ["内容更新与后台方案", "content-workflow"],
+  ["重新认识", "rethink"],
+  ["一站式", "one-stop"],
+  ["总览", "overview"],
+  ["考试", "exam"],
+  ["流程", "process"],
+  ["结构", "format"],
+  ["评分", "scoring"],
+  ["报名", "registration"],
+  ["当天", "day"],
+  ["考点", "test-center"],
+  ["时间", "schedule"],
+  ["费用", "fee"],
+  ["成绩", "results"],
+  ["证书", "certificate"],
+  ["写作", "writing"],
+  ["口语", "speaking"],
+  ["听力", "listening"],
+  ["阅读", "reading"],
+  ["语法", "grammar"],
+  ["词汇", "vocabulary"],
+  ["发音", "pronunciation"],
+  ["备考", "prep"],
+  ["路线", "roadmap"],
+  ["计划", "plan"],
+  ["复盘", "review"],
+  ["模板", "template"],
+  ["真题", "past-papers"],
+  ["模拟", "mock"],
+  ["技巧", "tips"],
+  ["经验", "tips"],
+  ["官方", "official"],
+  ["材料", "resources"],
+  ["资料", "resources"],
+  ["后台", "admin"],
+  ["更新", "update"],
+  ["内容", "content"],
+  ["图片", "images"],
+  ["飞书", "feishu"],
+  ["攻略", "guide"],
+  ["法语", "french"],
+  ["法国", "france"],
+  ["索邦", "sorbonne"],
+];
+
+const TEMPLATE_SNIPPETS = {
+  section: "## 小标题\n\n这里写这一节的核心解释。\n\n- 要点一：\n- 要点二：\n",
+  tip: "> 重点提示：这里写最想提醒学生注意的一句话。\n",
+  steps: "1. 第一步：\n2. 第二步：\n3. 第三步：\n",
+  divider: "---\n",
+  wechat: "## 需要进一步练习\n\n如果你希望我帮你判断目前离 DELF B2 还差哪一步，可以添加微信：meijie_fr。\n",
+};
+
 const state = {
   data: null,
   selectedArticleId: "",
@@ -77,7 +141,7 @@ function normalizeData() {
   state.data.articles = (state.data.articles || []).map((article, index) => ({
     id: article.id || article.slug || crypto.randomUUID(),
     title: article.title || "未命名文章",
-    slug: article.slug || slugify(article.title || `article-${index + 1}`),
+    slug: article.slug || smartSlug(article.title || `article-${index + 1}`),
     categoryId: article.categoryId || state.data.categories[0]?.id || "",
     order: Number(article.order || index + 1),
     author: article.author || "妹姐",
@@ -102,7 +166,9 @@ function bindEvents() {
   $$(".tab").forEach((button) => {
     button.addEventListener("click", () => setTab(button.dataset.tab));
   });
-  $("#saveAllButton").addEventListener("click", saveAll);
+  ["#saveAllButton", "#saveTopButton", "#saveBodyButton"].forEach((selector) => {
+    $(selector)?.addEventListener("click", saveAll);
+  });
   $("#downloadButton").addEventListener("click", () => downloadJson("data.json", collectData()));
   $("#newArticleButton").addEventListener("click", newArticle);
   $("#duplicateArticleButton").addEventListener("click", duplicateArticle);
@@ -118,6 +184,9 @@ function bindEvents() {
   $$(".toolbar button").forEach((button) => {
     button.addEventListener("click", () => handleToolbar(button));
   });
+  $$(".template-toolbar button").forEach((button) => {
+    button.addEventListener("click", () => insertTemplate(button.dataset.template));
+  });
   $("#wikiButton").addEventListener("click", insertWikiLink);
   $("#linkButton").addEventListener("click", insertExternalLink);
   [
@@ -132,7 +201,10 @@ function bindEvents() {
   ].forEach((field) => field.addEventListener("input", updateSelectedArticle));
   [fields.siteTitle, fields.siteSubtitle, fields.siteLogo, fields.siteSearchPlaceholder, fields.authorName, fields.authorAvatar, fields.authorBio, fields.authorWechatId, fields.authorWechatQr]
     .forEach((field) => field.addEventListener("input", updateSiteFields));
-  fields.password.addEventListener("input", () => sessionStorage.setItem("meijieAdminPassword", fields.password.value));
+  fields.password.addEventListener("input", () => {
+    fields.password.classList.remove("needs-attention");
+    sessionStorage.setItem("meijieAdminPassword", fields.password.value);
+  });
   window.addEventListener("beforeunload", (event) => {
     if (!state.dirty) return;
     event.preventDefault();
@@ -254,7 +326,7 @@ function updateSelectedArticle() {
   article.title = fields.articleTitle.value.trim() || "未命名文章";
   article.categoryId = fields.articleCategory.value;
   article.order = Number(fields.articleOrder.value || 100);
-  article.slug = fields.articleSlug.value.trim() || slugify(article.title);
+  article.slug = fields.articleSlug.value.trim() || uniqueArticleSlug(smartSlug(article.title, article.body), article.id);
   article.id = article.id || article.slug;
   article.summary = fields.articleSummary.value.trim();
   article.tags = splitList(fields.articleTags.value);
@@ -312,7 +384,7 @@ function duplicateArticle() {
   const copy = JSON.parse(JSON.stringify(article));
   copy.id = crypto.randomUUID();
   copy.title = `${copy.title} 副本`;
-  copy.slug = `${slugify(copy.title)}-${Date.now()}`;
+  copy.slug = uniqueArticleSlug(smartSlug(copy.title), copy.id);
   copy.order = getNextOrder(state.data.articles.filter((item) => item.categoryId === copy.categoryId));
   state.data.articles.push(copy);
   state.selectedArticleId = copy.id;
@@ -402,7 +474,7 @@ function applyPastedContent(append) {
   if (!article) return;
   if (!append) {
     article.title = parsed.title || article.title;
-    article.slug = slugify(article.title);
+    article.slug = uniqueArticleSlug(smartSlug(article.title, article.body), article.id);
     article.summary = parsed.summary;
     article.tags = parsed.tags;
     article.aliases = [article.title];
@@ -416,13 +488,18 @@ function applyPastedContent(append) {
 
 function parsePastedContent(html, text) {
   let markdown = html ? htmlToMarkdown(html) : textToMarkdown(text);
-  const lines = markdown.split("\n").map((line) => line.trim()).filter(Boolean);
+  const lines = markdown.split("\n");
+  const firstContentIndex = lines.findIndex((line) => line.trim());
+  const firstLine = firstContentIndex >= 0 ? lines[firstContentIndex].trim() : "";
   let title = "";
-  if (lines[0]?.startsWith("# ")) {
-    title = lines[0].replace(/^#\s+/, "");
-    markdown = lines.slice(1).join("\n\n");
+  if (firstLine.startsWith("# ")) {
+    title = firstLine.replace(/^#\s+/, "");
+    lines.splice(firstContentIndex, 1);
+    markdown = lines.join("\n");
   } else {
-    title = stripMarkdown(lines[0] || "新文章");
+    title = stripMarkdown(firstLine || "新文章");
+    if (firstContentIndex >= 0) lines.splice(firstContentIndex, 1);
+    markdown = lines.join("\n");
   }
   markdown = normalizePastedMarkdown(markdown.replace(/^#\s+/gm, "## "));
   markdown = extractDataUrlImages(markdown);
@@ -442,30 +519,76 @@ function extractDataUrlImages(markdown) {
 
 function htmlToMarkdown(html) {
   const doc = new DOMParser().parseFromString(html, "text/html");
-  const chunks = [];
-  doc.body.childNodes.forEach((node) => chunks.push(nodeToMarkdown(node)));
-  return chunks.join("\n\n").replace(/\n{3,}/g, "\n\n").trim();
+  const chunks = [...doc.body.childNodes].map(nodeToMarkdown);
+  return cleanupPastedMarkdown(chunks.join("\n\n"));
 }
 
 function nodeToMarkdown(node) {
-  if (node.nodeType === Node.TEXT_NODE) return node.textContent.trim();
+  if (node.nodeType === Node.TEXT_NODE) return normalizeInlineText(node.textContent);
   if (node.nodeType !== Node.ELEMENT_NODE) return "";
   const tag = node.tagName.toLowerCase();
-  const text = [...node.childNodes].map(nodeToMarkdown).join(" ").replace(/\s+/g, " ").trim();
-  if (!text && tag !== "img") return "";
+  if (tag === "br") return "\n";
+  if (tag === "hr") return "---";
+  if (tag === "img") return `![${node.getAttribute("alt") || "图片"}](${node.getAttribute("src") || ""})`;
+  if (tag === "table") return tableToMarkdown(node);
+  if (tag === "pre") return `\`\`\`\n${node.textContent.replace(/\n{3,}/g, "\n\n").trim()}\n\`\`\``;
+
+  const text = childrenToMarkdown(node).trim();
+  if (!text) return node.querySelector("br") ? "\n" : "";
   if (tag === "h1") return `# ${text}`;
   if (tag === "h2") return `## ${text}`;
   if (tag === "h3") return `### ${text}`;
+  if (tag === "h4") return `### ${text}`;
   if (tag === "strong" || tag === "b") return `**${text}**`;
   if (tag === "em" || tag === "i") return `*${text}*`;
-  if (tag === "a") return `[${text}](${node.getAttribute("href") || ""})`;
-  if (tag === "img") return `![${node.getAttribute("alt") || "图片"}](${node.getAttribute("src") || ""})`;
-  if (tag === "li") return `- ${text}`;
-  if (tag === "ul" || tag === "ol") return [...node.children].map(nodeToMarkdown).join("\n");
-  if (tag === "table") return tableToMarkdown(node);
+  if (tag === "a") {
+    const href = node.getAttribute("href") || "";
+    return href ? `[${text}](${href})` : text;
+  }
+  if (tag === "li") return text.replace(/\n+/g, " ").trim();
+  if (tag === "ul") {
+    return [...node.children]
+      .filter((child) => child.tagName?.toLowerCase() === "li")
+      .map((child) => `- ${nodeToMarkdown(child).replace(/\n+/g, " ").trim()}`)
+      .join("\n");
+  }
+  if (tag === "ol") {
+    return [...node.children]
+      .filter((child) => child.tagName?.toLowerCase() === "li")
+      .map((child, index) => `${index + 1}. ${nodeToMarkdown(child).replace(/\n+/g, " ").trim()}`)
+      .join("\n");
+  }
   if (tag === "blockquote") return text.split("\n").map((line) => `> ${line}`).join("\n");
-  if (tag === "br") return "\n";
   return text;
+}
+
+function childrenToMarkdown(node) {
+  const parts = [];
+  [...node.childNodes].forEach((child) => {
+    const part = nodeToMarkdown(child);
+    if (!part && part !== "\n") return;
+    if (isBlockNode(child)) {
+      parts.push(part.trim());
+      return;
+    }
+    if (!parts.length) {
+      parts.push(part);
+      return;
+    }
+    parts[parts.length - 1] += part;
+  });
+  return parts.join("\n\n");
+}
+
+function isBlockNode(node) {
+  if (node.nodeType !== Node.ELEMENT_NODE) return false;
+  return /^(address|article|aside|blockquote|div|dl|figure|footer|h[1-6]|header|hr|li|main|nav|ol|p|pre|section|table|ul)$/i.test(node.tagName);
+}
+
+function normalizeInlineText(text) {
+  return String(text || "")
+    .replace(/\u00a0/g, " ")
+    .replace(/[ \t]+/g, " ");
 }
 
 function tableToMarkdown(table) {
@@ -481,17 +604,18 @@ function tableToMarkdown(table) {
 }
 
 function normalizePastedMarkdown(markdown) {
-  const lines = String(markdown || "").split("\n");
+  const lines = cleanupPastedMarkdown(markdown).split("\n");
   return lines
     .map((line, index) => {
       const trimmed = line.trim();
       if (!trimmed) return "";
-      if (/^(#{2,3}|[-*>]|\d+\.)\s+/.test(trimmed) || trimmed.includes("|")) return trimmed;
-      if (index > 0 && looksLikeHeading(trimmed)) return `## ${trimmed}`;
+      if (/^(#{2,3}|[-*>]|\d+\.)\s+/.test(trimmed) || trimmed.includes("|") || trimmed === "---") return trimmed;
+      const previousBlank = index === 0 || !lines[index - 1]?.trim();
+      if (index > 0 && previousBlank && looksLikeHeading(trimmed)) return `## ${trimmed}`;
       return trimmed;
     })
     .join("\n")
-    .replace(/\n{3,}/g, "\n\n")
+    .replace(/\n{4,}/g, "\n\n\n")
     .trim();
 }
 
@@ -502,9 +626,35 @@ function looksLikeHeading(line) {
 }
 
 function textToMarkdown(text) {
-  const lines = String(text || "").split(/\n+/).map((line) => line.trim()).filter(Boolean);
-  if (!lines.length) return "";
-  return lines.map((line, index) => index === 0 ? `# ${line}` : line).join("\n\n");
+  const lines = String(text || "")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => normalizePlainTextLine(line));
+  const firstContentIndex = lines.findIndex((line) => line.trim());
+  if (firstContentIndex < 0) return "";
+  lines[firstContentIndex] = lines[firstContentIndex].trim().startsWith("# ")
+    ? lines[firstContentIndex].trim()
+    : `# ${lines[firstContentIndex].trim()}`;
+  return cleanupPastedMarkdown(lines.join("\n"));
+}
+
+function normalizePlainTextLine(line) {
+  const trimmedRight = String(line || "")
+    .replace(/\u00a0/g, " ")
+    .replace(/[ \t]+$/g, "");
+  const trimmed = trimmedRight.trim();
+  if (!trimmed) return "";
+  if (/^[•◦·]\s*/.test(trimmed)) return trimmed.replace(/^[•◦·]\s*/, "- ");
+  return trimmedRight;
+}
+
+function cleanupPastedMarkdown(markdown) {
+  return String(markdown || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{4,}/g, "\n\n\n")
+    .trim();
 }
 
 function clearPasteBox() {
@@ -517,6 +667,17 @@ function handleToolbar(button) {
   if (button.dataset.insert) insertAtCursor(button.dataset.insert);
   if (button.dataset.wrap) wrapSelection(button.dataset.wrap);
   if (button.dataset.line) prefixCurrentLine(button.dataset.line);
+}
+
+function insertTemplate(templateId) {
+  const snippet = TEMPLATE_SNIPPETS[templateId];
+  if (!snippet) return;
+  const textarea = fields.articleBody;
+  const before = textarea.value.slice(0, textarea.selectionStart);
+  const after = textarea.value.slice(textarea.selectionEnd);
+  const prefix = before && !before.endsWith("\n\n") ? "\n\n" : "";
+  const suffix = after && !after.startsWith("\n\n") ? "\n\n" : "";
+  insertAtCursor(`${prefix}${snippet}${suffix}`);
 }
 
 function insertWikiLink() {
@@ -551,7 +712,29 @@ function fileToDataUrl(file) {
 }
 
 function renderPreview() {
-  fields.articlePreview.innerHTML = markdownToHtml(fields.articleBody.value);
+  const article = getSelectedArticle();
+  const category = state.data.categories.find((item) => item.id === fields.articleCategory.value);
+  const rendered = markdownToHtml(fields.articleBody.value, article?.slug || "preview");
+  const tags = splitList(fields.articleTags.value)
+    .map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`)
+    .join("");
+  const toc = rendered.headings.length
+    ? `<nav class="article-toc" aria-label="本文目录"><strong>本文目录</strong>${rendered.headings
+        .map((heading) => `<a class="level-${heading.level}" href="#${heading.id}">${escapeHtml(heading.text)}</a>`)
+        .join("")}</nav>`
+    : "";
+
+  fields.articlePreview.innerHTML = `
+    <header class="article-header">
+      <p class="eyebrow">${escapeHtml(category?.title || "DELF B2")}</p>
+      <h1>${escapeHtml(fields.articleTitle.value || "文章标题")}</h1>
+      ${fields.articleSummary.value ? `<p class="summary">${escapeHtml(fields.articleSummary.value)}</p>` : ""}
+      <div class="meta"><span>作者：妹姐</span><span>正式前台预览样式</span></div>
+      ${tags ? `<div class="tag-row">${tags}</div>` : ""}
+    </header>
+    ${toc}
+    <div class="article-body">${rendered.html}</div>
+  `;
 }
 
 function previewAssetPath(path) {
@@ -560,35 +743,102 @@ function previewAssetPath(path) {
   return `../${path}`;
 }
 
-function markdownToHtml(markdown) {
-  return String(markdown || "")
-    .split(/\n{2,}/)
-    .map((block) => {
-      const trimmed = block.trim();
-      if (!trimmed) return "";
-      if (/^###\s+/.test(trimmed)) return `<h3>${escapeHtml(trimmed.replace(/^###\s+/, ""))}</h3>`;
-      if (/^##\s+/.test(trimmed)) return `<h2>${escapeHtml(trimmed.replace(/^##\s+/, ""))}</h2>`;
-      if (/^>\s+/.test(trimmed)) {
-        return `<blockquote>${trimmed.split("\n").map((line) => `<p>${inlineMarkdown(line.replace(/^>\s+/, ""))}</p>`).join("")}</blockquote>`;
-      }
-      if (isMarkdownTable(trimmed)) return renderMarkdownTable(trimmed);
-      if (/^-\s+/m.test(trimmed)) {
-        return `<ul>${trimmed.split("\n").map((line) => `<li>${inlineMarkdown(line.replace(/^-\s+/, ""))}</li>`).join("")}</ul>`;
-      }
-      if (/^!\[/.test(trimmed)) {
-        return trimmed.replace(/^!\[(.*?)\]\((\S+?)(?:\s+"(.*?)")?\)/, (_, alt, src, caption) => {
-          const previewSrc = previewAssetPath(src);
-          return `<figure><img src="${escapeAttr(previewSrc)}" alt="${escapeAttr(alt)}"><figcaption>${escapeHtml(caption || alt)}</figcaption></figure>`;
-        });
-      }
-      return `<p>${inlineMarkdown(trimmed.replace(/\n/g, " "))}</p>`;
-    })
-    .join("");
+function markdownToHtml(markdown, articleSlug = "preview") {
+  const headings = [];
+  const lines = String(markdown || "").replace(/\r\n/g, "\n").split("\n");
+  const html = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim()) {
+      i += 1;
+      continue;
+    }
+    if (line.startsWith("```")) {
+      const code = [];
+      i += 1;
+      while (i < lines.length && !lines[i].startsWith("```")) code.push(lines[i++]);
+      i += 1;
+      html.push(`<pre><code>${escapeHtml(code.join("\n"))}</code></pre>`);
+      continue;
+    }
+    if (line.trim() === "---") {
+      html.push("<hr>");
+      i += 1;
+      continue;
+    }
+    const heading = line.match(/^(#{2,3})\s+(.+)$/);
+    if (heading) {
+      const level = heading[1].length;
+      const text = stripInlineSyntax(heading[2]);
+      const id = makeHeadingId(articleSlug, text, headings.length);
+      headings.push({ id, text, level });
+      html.push(`<h${level} id="${escapeAttr(id)}">${inlineMarkdown(heading[2])}</h${level}>`);
+      i += 1;
+      continue;
+    }
+    if (isTableStart(lines, i)) {
+      const tableLines = [];
+      while (i < lines.length && lines[i].includes("|")) tableLines.push(lines[i++]);
+      html.push(renderMarkdownTable(tableLines.join("\n")));
+      continue;
+    }
+    const image = line.match(/^!\[(.*?)\]\((\S+?)(?:\s+"(.*?)")?\)\s*$/);
+    if (image) {
+      html.push(renderImage(image[1], image[2], image[3]));
+      i += 1;
+      continue;
+    }
+    const media = line.match(/^::media\{(.+)\}\s*$/);
+    if (media) {
+      html.push(renderMedia(parseAttrs(media[1])));
+      i += 1;
+      continue;
+    }
+    if (line.startsWith("> ")) {
+      const quote = [];
+      while (i < lines.length && lines[i].startsWith("> ")) quote.push(lines[i++].slice(2));
+      html.push(`<blockquote>${quote.map((item) => `<p>${inlineMarkdown(item)}</p>`).join("")}</blockquote>`);
+      continue;
+    }
+    if (/^\s*[-*]\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) items.push(lines[i++].replace(/^\s*[-*]\s+/, ""));
+      html.push(`<ul>${items.map((item) => `<li>${inlineMarkdown(item)}</li>`).join("")}</ul>`);
+      continue;
+    }
+    if (/^\s*\d+\.\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) items.push(lines[i++].replace(/^\s*\d+\.\s+/, ""));
+      html.push(`<ol>${items.map((item) => `<li>${inlineMarkdown(item)}</li>`).join("")}</ol>`);
+      continue;
+    }
+    const paragraph = [];
+    while (i < lines.length && lines[i].trim() && !isSpecialLine(lines, i)) paragraph.push(lines[i++]);
+    html.push(`<p>${paragraph.map((item) => inlineMarkdown(item)).join("<br>")}</p>`);
+  }
+
+  return { html: html.join("\n"), headings };
 }
 
-function isMarkdownTable(block) {
-  const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
-  return lines.length >= 2 && lines[0].includes("|") && /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(lines[1]);
+function isSpecialLine(lines, i) {
+  const line = lines[i];
+  return (
+    line.startsWith("```") ||
+    line.trim() === "---" ||
+    /^(#{2,3})\s+/.test(line) ||
+    /^!\[(.*?)\]\((.*?)\)/.test(line) ||
+    /^::media\{/.test(line) ||
+    line.startsWith("> ") ||
+    /^\s*[-*]\s+/.test(line) ||
+    /^\s*\d+\.\s+/.test(line) ||
+    isTableStart(lines, i)
+  );
+}
+
+function isTableStart(lines, i) {
+  return Boolean(lines[i]?.includes("|") && lines[i + 1]?.match(/^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/));
 }
 
 function renderMarkdownTable(block) {
@@ -598,7 +848,7 @@ function renderMarkdownTable(block) {
     .filter(Boolean)
     .filter((_, index) => index !== 1)
     .map((line) => line.replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim()));
-  const [head, ...body] = rows;
+  const [head = [], ...body] = rows;
   return `
     <table>
       <thead><tr>${head.map((cell) => `<th>${inlineMarkdown(cell)}</th>`).join("")}</tr></thead>
@@ -607,20 +857,67 @@ function renderMarkdownTable(block) {
   `;
 }
 
+function renderImage(alt, src, caption) {
+  const previewSrc = previewAssetPath(src);
+  return `
+    <figure>
+      <img src="${escapeAttr(previewSrc)}" alt="${escapeAttr(alt)}">
+      ${caption || alt ? `<figcaption>${escapeHtml(caption || alt)}</figcaption>` : ""}
+    </figure>
+  `;
+}
+
+function renderMedia(attrs) {
+  const src = previewAssetPath(attrs.src || "");
+  if (!src) return "";
+  const caption = attrs.caption ? `<figcaption>${escapeHtml(attrs.caption)}</figcaption>` : "";
+  if (attrs.type === "video") {
+    const poster = attrs.poster ? ` poster="${escapeAttr(previewAssetPath(attrs.poster))}"` : "";
+    return `<figure><video controls src="${escapeAttr(src)}"${poster}></video>${caption}</figure>`;
+  }
+  return `<figure><audio controls src="${escapeAttr(src)}"></audio>${caption}</figure>`;
+}
+
+function parseAttrs(input) {
+  const attrs = {};
+  String(input || "").replace(/(\w+)="([^"]*)"/g, (_, key, value) => {
+    attrs[key] = value;
+    return "";
+  });
+  return attrs;
+}
+
 function inlineMarkdown(text) {
-  return escapeHtml(text)
-    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/\[\[([^\]]+)\]\]/g, '<span class="wiki-link">[[$1]]</span>')
-    .replace(/\[([^\]]+)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+  let output = escapeHtml(text);
+  output = output.replace(/\[\[([^\]]+)\]\]/g, (_, rawTarget) => {
+    const [target, label] = rawTarget.split("|").map((item) => item.trim());
+    return `<span class="wiki-link">${escapeHtml(label || target)}</span>`;
+  });
+  output = output.replace(/\[([^\]]+)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  output = output.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  output = output.replace(/`([^`]+)`/g, "<code>$1</code>");
+  return output;
+}
+
+function stripInlineSyntax(text) {
+  return stripMarkdown(text).replace(/\s+/g, " ").trim();
+}
+
+function makeHeadingId(slug, text, index) {
+  return `${slug || "preview"}-${slugify(text) || "section"}-${index}`;
 }
 
 async function saveAll() {
   const password = fields.password.value.trim();
   if (!password) {
-    alert("请先填写后台密码。");
+    fields.password.classList.add("needs-attention");
+    fields.password.focus();
+    $(".setup-help")?.setAttribute("open", "");
+    setStatus("请先填写后台密码：这个密码需要你在 Netlify 的 ADMIN_PASSWORD 环境变量里自己设置。");
     return;
   }
-  setStatus("正在保存到 GitHub...");
+  setSavingState(true);
+  setStatus("正在保存到 GitHub，请不要关闭页面...");
   try {
     const response = await fetch("/.netlify/functions/save-content", {
       method: "POST",
@@ -636,8 +933,19 @@ async function saveAll() {
     state.dirty = false;
     setStatus(`保存成功：${result.message || "已提交到 GitHub"}`);
   } catch (error) {
-    setStatus(`保存失败：${error.message}。你可以先下载 data.json 手动上传。`);
+    setStatus(`保存失败：${error.message}。请先检查 Netlify 的 ADMIN_PASSWORD、GITHUB_TOKEN、GITHUB_REPO、GITHUB_BRANCH 是否都已配置；也可以先下载 data.json 备用。`);
+  } finally {
+    setSavingState(false);
   }
+}
+
+function setSavingState(isSaving) {
+  ["#saveAllButton", "#saveTopButton", "#saveBodyButton"].forEach((selector) => {
+    const button = $(selector);
+    if (!button) return;
+    button.disabled = isSaving;
+    button.textContent = isSaving ? "保存中..." : (selector === "#saveAllButton" ? "保存/上传到线上" : "保存/上传");
+  });
 }
 
 function regenerateMeta() {
@@ -652,7 +960,7 @@ function regenerateMeta() {
 function regenerateSlug() {
   const article = getSelectedArticle();
   if (!article) return;
-  article.slug = slugify(article.title);
+  article.slug = uniqueArticleSlug(smartSlug(article.title, article.body), article.id);
   renderArticleEditor();
   markDirty();
 }
@@ -765,6 +1073,64 @@ function splitList(value) {
 function normalizeList(value) {
   if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
   return splitList(value);
+}
+
+function smartSlug(title, body = "") {
+  const original = String(title || "").replace(/^\s*(第?\d+[\.\u3001、章节课]?\s*)+/, "").trim();
+  const asciiSlug = slugify(transliterateFrench(original));
+  if (!/[\u4e00-\u9fff]/.test(original)) return asciiSlug;
+
+  const source = transliterateFrench(original || body).toLowerCase();
+  const headline = source.split(/\n/)[0].replace(/^\s*(第?\d+[\.\u3001、章节课]?\s*)+/, "");
+  const keywords = [...SLUG_KEYWORDS].sort((a, b) => b[0].length - a[0].length);
+  const tokens = [];
+  let i = 0;
+
+  while (i < headline.length) {
+    const rest = headline.slice(i);
+    const word = rest.match(/^[a-z0-9]+/);
+    if (word) {
+      tokens.push(word[0]);
+      i += word[0].length;
+      continue;
+    }
+    const match = keywords.find(([keyword]) => rest.startsWith(transliterateFrench(keyword).toLowerCase()));
+    if (match) {
+      tokens.push(...match[1].split("-"));
+      i += match[0].length;
+      continue;
+    }
+    i += 1;
+  }
+
+  const slug = tokens
+    .filter(Boolean)
+    .filter((token, index, list) => list.indexOf(token) === index || /^[a-z]$/.test(token))
+    .join("-");
+  return slugify(slug || asciiSlug || "article");
+}
+
+function uniqueArticleSlug(base, currentId = "") {
+  const cleanBase = slugify(base || "article");
+  const used = new Set(
+    (state.data?.articles || [])
+      .filter((article) => article.id !== currentId)
+      .map((article) => article.slug)
+      .filter(Boolean)
+  );
+  if (!used.has(cleanBase)) return cleanBase;
+  let index = 2;
+  while (used.has(`${cleanBase}-${index}`)) index += 1;
+  return `${cleanBase}-${index}`;
+}
+
+function transliterateFrench(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/œ/g, "oe")
+    .replace(/æ/g, "ae")
+    .replace(/ç/g, "c");
 }
 
 function slugify(value) {

@@ -23,9 +23,15 @@
             后台密码
             <input id="adminPassword" type="password" placeholder="Netlify 环境变量 ADMIN_PASSWORD">
           </label>
-          <button class="primary full" id="saveAllButton" type="button">保存到线上</button>
+          <p class="hint">这个密码需要你自己在 Netlify 里设置。设置名叫 <strong>ADMIN_PASSWORD</strong>，这里填写同一个密码。</p>
+          <details class="setup-help">
+            <summary>密码从哪里设置？</summary>
+            <p>进入 Netlify 项目后，找到 Site configuration → Environment variables，新增 <strong>ADMIN_PASSWORD</strong>。它不是邮箱密码，也不是 GitHub 密码。</p>
+            <p>同时还需要配置 <strong>GITHUB_TOKEN</strong>、<strong>GITHUB_REPO</strong>、<strong>GITHUB_BRANCH</strong>，保存按钮才能把内容写回 GitHub。</p>
+          </details>
+          <button class="primary full" id="saveAllButton" type="button">保存/上传到线上</button>
           <button class="ghost full" id="downloadButton" type="button">下载 data.json 备用</button>
-          <p id="saveStatus" class="hint">本地预览时无法直接写回 GitHub；线上部署后可保存。</p>
+          <p id="saveStatus" class="hint">线上 /admin/ 可以保存到 GitHub；本机预览建议先下载 data.json 备用。</p>
         </section>
 
         <nav class="admin-tabs" aria-label="后台模块">
@@ -51,6 +57,7 @@
               <h1 id="editorTitle">文章编辑</h1>
             </div>
             <div class="head-actions">
+              <button class="primary" id="saveTopButton" type="button">保存/上传</button>
               <button id="duplicateArticleButton" type="button">复制文章</button>
               <button class="danger" id="deleteArticleButton" type="button">删除文章</button>
             </div>
@@ -59,7 +66,7 @@
           <div class="editor-grid">
             <section class="panel">
               <h2>飞书粘贴整理</h2>
-              <p class="hint">从飞书复制整页内容，粘贴到下方。点击“智能整理”后，会自动识别标题、摘要、标签、正文结构。</p>
+              <p class="hint">从飞书复制整页内容，粘贴到下方。会尽量保留换行、空行、列表、表格和图片，并自动识别标题、摘要、标签、正文结构。</p>
               <div id="pasteBox" class="paste-box" contenteditable="true" data-placeholder="在这里粘贴飞书文档内容..."></div>
               <div class="inline-actions">
                 <button class="primary" id="parsePasteButton" type="button">智能整理成文章</button>
@@ -117,6 +124,7 @@
                 <button type="button" data-insert="### ">H3</button>
                 <button type="button" data-wrap="**">加粗</button>
                 <button type="button" data-line="- ">列表</button>
+                <button type="button" data-line="1. ">编号</button>
                 <button type="button" data-line="> ">引用</button>
                 <button type="button" id="wikiButton">双链</button>
                 <button type="button" id="linkButton">链接</button>
@@ -124,7 +132,16 @@
                   插图
                   <input id="imageInput" type="file" accept="image/*">
                 </label>
+                <button class="primary" id="saveBodyButton" type="button">保存/上传</button>
               </div>
+            </div>
+            <div class="template-toolbar" aria-label="常用排版模板">
+              <span>常用排版</span>
+              <button type="button" data-template="section">小节模板</button>
+              <button type="button" data-template="tip">重点提示</button>
+              <button type="button" data-template="steps">步骤清单</button>
+              <button type="button" data-template="divider">分隔线</button>
+              <button type="button" data-template="wechat">结尾引导</button>
             </div>
             <div class="body-grid">
               <textarea id="articleBody" rows="24" spellcheck="false"></textarea>

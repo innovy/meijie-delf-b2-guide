@@ -372,6 +372,11 @@ function markdownToHtml(markdown, articleSlug) {
       html.push(`<pre><code>${escapeHtml(code.join("\n"))}</code></pre>`);
       continue;
     }
+    if (line.trim() === "---") {
+      html.push("<hr>");
+      i += 1;
+      continue;
+    }
     const heading = line.match(/^(#{2,3})\s+(.+)$/);
     if (heading) {
       const level = heading[1].length;
@@ -420,7 +425,7 @@ function markdownToHtml(markdown, articleSlug) {
     }
     const paragraph = [];
     while (i < lines.length && lines[i].trim() && !isSpecialLine(lines, i)) paragraph.push(lines[i++]);
-    html.push(`<p>${inlineMarkdown(paragraph.join(" "))}</p>`);
+    html.push(`<p>${paragraph.map((item) => inlineMarkdown(item)).join("<br>")}</p>`);
   }
 
   return { html: html.join("\n"), headings };
@@ -430,6 +435,7 @@ function isSpecialLine(lines, i) {
   const line = lines[i];
   return (
     line.startsWith("```") ||
+    line.trim() === "---" ||
     /^(#{2,3})\s+/.test(line) ||
     /^!\[(.*?)\]\((.*?)\)/.test(line) ||
     /^::media\{/.test(line) ||

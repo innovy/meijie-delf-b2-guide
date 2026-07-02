@@ -568,6 +568,13 @@ a:hover {
   color: inherit;
 }
 
+.article-body hr {
+  height: 1px;
+  margin: 32px 0;
+  border: 0;
+  background: var(--line);
+}
+
 .article-body table {
   width: 100%;
   margin: 22px 0;
