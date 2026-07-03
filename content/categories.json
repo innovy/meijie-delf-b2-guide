@@ -1,10 +1,10 @@
 {
   "categories": [
     {
-      "title": "考试认知",
-      "slug": "exam-basics",
+      "title": "专项突破",
+      "slug": "skills",
       "order": 1,
-      "file": "content/categories/01-exam-basics.md"
+      "file": "content/categories/04-skills.md"
     },
     {
       "title": "考试流程",
@@ -13,16 +13,16 @@
       "file": "content/categories/02-process.md"
     },
     {
-      "title": "备考策略",
-      "slug": "strategy",
+      "title": "考试认知",
+      "slug": "exam-basics",
       "order": 3,
-      "file": "content/categories/03-strategy.md"
+      "file": "content/categories/01-exam-basics.md"
     },
     {
-      "title": "专项突破",
-      "slug": "skills",
+      "title": "备考策略",
+      "slug": "strategy",
       "order": 4,
-      "file": "content/categories/04-skills.md"
+      "file": "content/categories/03-strategy.md"
     },
     {
       "title": "站点管理",
