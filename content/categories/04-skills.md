@@ -1,5 +1,5 @@
 ---
 title: "专项突破"
-slug: skills
+slug: "skills"
 order: 4
 ---
