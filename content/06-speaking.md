@@ -4,7 +4,7 @@ slug: "speaking"
 author: "妹姐"
 categoryId: "skills"
 category: "专项突破"
-order: 6
+order: 3
 summary: "B2 口语要把短文读成问题，把问题变成立场，再用结构和互动撑住讨论。"
 tags: ["口语", "Production orale", "陈述", "互动"]
 aliases: ["口语", "Production orale", "口头表达"]
