@@ -27,6 +27,10 @@
     {
       "file": "content/07-content-workflow.md",
       "order": 7
+    },
+    {
+      "file": "content/07-delf-dalf.md",
+      "order": 7
     }
   ]
 }
