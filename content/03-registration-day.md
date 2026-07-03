@@ -1,12 +1,13 @@
 ---
 title: "报名与考试当天流程"
-slug: registration-day
+slug: "registration-day"
 author: "妹姐"
+categoryId: "process"
 category: "考试流程"
 order: 3
 summary: "从找考点、确认时间费用，到考试当天证件、入场、成绩和证书的完整流程。"
-tags: [报名, 考点, 考试当天, 成绩, 证书]
-aliases: [报名与考试当天流程, 报名, 考试当天, 考点]
+tags: ["报名", "考点", "考试当天", "成绩", "证书"]
+aliases: ["报名与考试当天流程", "报名", "考试当天", "考点"]
 ---
 
 ## 报名前先确认三件事
