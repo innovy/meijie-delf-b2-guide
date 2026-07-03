@@ -1,12 +1,13 @@
 ---
 title: "备考路线图"
-slug: prep-roadmap
+slug: "prep-roadmap"
 author: "妹姐"
+categoryId: "strategy"
 category: "备考策略"
 order: 4
 summary: "把 DELF B2 备考拆成诊断、输入、专项、模拟和复盘五个阶段。"
-tags: [备考, 计划, 学习路径, 复盘]
-aliases: [备考路线图, 备考计划, 学习路径]
+tags: ["备考", "计划", "学习路径", "复盘"]
+aliases: ["备考路线图", "备考计划", "学习路径"]
 ---
 
 ## 五阶段路线
