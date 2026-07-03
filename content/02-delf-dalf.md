@@ -6,7 +6,7 @@ categoryId: "category-1783073473877"
 category: "考试介绍篇"
 order: 2
 summary: "一、DELF DALF到底是什么？ DELF (Diplôme d'Études en Langue Française) 和 DALF (Diplôme Approfondi de..."
-tags: ["DELF B2", "专项突破"]
+tags: ["DELF B2", "考试介绍篇"]
 aliases: ["DELF DALF 究竟有什么用？一文看懂其含金量与价值"]
 ---
 
