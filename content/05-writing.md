@@ -1,12 +1,13 @@
 ---
 title: "写作"
-slug: writing
+slug: "writing"
 author: "妹姐"
+categoryId: "skills"
 category: "专项突破"
 order: 5
 summary: "B2 写作的核心不是模板，而是用清楚的结构完成一篇有立场的正式文本。"
-tags: [写作, Production ecrite, 论证, 作文]
-aliases: [写作, Production écrite, Production ecrite, 书面表达]
+tags: ["写作", "Production ecrite", "论证", "作文"]
+aliases: ["写作", "Production écrite", "Production ecrite", "书面表达"]
 ---
 
 ## 任务本质
