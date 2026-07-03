@@ -1,12 +1,13 @@
 ---
 title: "内容更新与后台方案"
-slug: content-workflow
+slug: "content-workflow"
 author: "妹姐"
+categoryId: "site-management"
 category: "站点管理"
 order: 7
 summary: "给老师维护内容用的说明：Markdown 源文件、后台保存、图片和部署之间怎么保持同步。"
-tags: [后台, CMS, 图片, 部署, 飞书]
-aliases: [内容更新, 后台方案, Markdown, 图片]
+tags: ["后台", "CMS", "图片", "部署", "飞书"]
+aliases: ["内容更新", "后台方案", "Markdown", "图片"]
 ---
 
 ## 先说结论
