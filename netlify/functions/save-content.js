@@ -119,7 +119,7 @@ async function saveContent(event) {
 
   return json(200, {
     ok: true,
-    message: `已一次性提交 Markdown 源文件、生成 JSON，并上传 ${assets.length} 个图片资源。Netlify 会在 GitHub 更新后自动重新部署。`,
+    message: `已提交 Markdown 源文件、生成 JSON，并上传 ${assets.length} 个图片资源。Netlify 会在 GitHub 更新后自动重新部署。`,
     config: publicConfig(config),
   });
 }
@@ -479,68 +479,58 @@ function getStaleSourcePaths(previousData, nextData) {
 }
 
 async function commitFiles({ config, files, deletePaths, message }) {
-  const refPath = `/repos/${config.repo}/git/ref/heads/${encodeURIComponentPath(config.branch)}`;
-  const ref = await githubJson({ config, endpoint: refPath, action: "读取 GitHub 分支引用" });
-  const currentCommit = await githubJson({ config, endpoint: `/repos/${config.repo}/git/commits/${ref.object.sha}`, action: "读取 GitHub 当前提交" });
-
-  const treeEntries = [];
+  const filePaths = new Set(files.map((file) => file.path));
   for (const file of files) {
-    const blob = await githubJson({
+    await putContentFile({
       config,
-      endpoint: `/repos/${config.repo}/git/blobs`,
-      action: `准备写入 ${file.path}`,
-      options: {
-        method: "POST",
-        body: JSON.stringify({
-          content: file.content,
-          encoding: file.encoding || "utf-8",
-        }),
-      },
+      path: file.path,
+      content: file.content,
+      encoding: file.encoding || "utf-8",
+      message,
     });
-    treeEntries.push({ path: file.path, mode: "100644", type: "blob", sha: blob.sha });
   }
 
-  const filePaths = new Set(files.map((file) => file.path));
-  deletePaths
-    .filter((path) => !filePaths.has(path))
-    .forEach((path) => treeEntries.push({ path, mode: "100644", type: "blob", sha: null }));
+  for (const path of deletePaths.filter((item) => !filePaths.has(item))) {
+    await deleteContentFile({ config, path, message });
+  }
+}
 
-  const tree = await githubJson({
-    config,
-    endpoint: `/repos/${config.repo}/git/trees`,
-    action: "创建 GitHub 文件树",
-    options: {
-      method: "POST",
-      body: JSON.stringify({
-        base_tree: currentCommit.tree.sha,
-        tree: treeEntries,
-      }),
-    },
-  });
-
-  const commit = await githubJson({
-    config,
-    endpoint: `/repos/${config.repo}/git/commits`,
-    action: "创建 GitHub 提交",
-    options: {
-      method: "POST",
-      body: JSON.stringify({
-        message,
-        tree: tree.sha,
-        parents: [ref.object.sha],
-      }),
-    },
-  });
+async function putContentFile({ config, path, content, encoding, message }) {
+  const existing = await getContentFile({ config, path, purpose: "target" });
+  const contentBase64 = encoding === "base64"
+    ? content
+    : Buffer.from(content, "utf8").toString("base64");
 
   await githubJson({
     config,
-    endpoint: refPath,
-    action: "更新 GitHub 分支",
+    endpoint: `/repos/${config.repo}/contents/${encodeURIComponentPath(path)}`,
+    action: `写入 ${path}`,
     options: {
-      method: "PATCH",
+      method: "PUT",
       body: JSON.stringify({
-        sha: commit.sha,
-        force: false,
+        message,
+        content: contentBase64,
+        branch: config.branch,
+        ...(existing.sha ? { sha: existing.sha } : {}),
+      }),
+    },
+  });
+}
+
+async function deleteContentFile({ config, path, message }) {
+  const existing = await getContentFile({ config, path, purpose: "target" });
+  if (!existing.sha) return;
+
+  await githubJson({
+    config,
+    endpoint: `/repos/${config.repo}/contents/${encodeURIComponentPath(path)}`,
+    action: `删除 ${path}`,
+    options: {
+      method: "DELETE",
+      body: JSON.stringify({
+        message,
+        sha: existing.sha,
+        branch: config.branch,
       }),
     },
   });
@@ -601,8 +591,8 @@ function githubError({ status, text, action, config }) {
     friendly = `找不到 GitHub 仓库 ${config.repo}，或 Token 没有访问这个仓库的权限。`;
     fix = "GITHUB_REPO 只填 用户名/仓库名；同时确认 Token 的 Repository access 选中了这个仓库。";
   } else if (status === 404 && action.includes("分支")) {
-    friendly = `找不到 GitHub 分支 ${config.branch}。`;
-    fix = "打开 GitHub 仓库首页，看默认分支叫 main 还是 master，然后把 GITHUB_BRANCH 改成一样。";
+    friendly = `没能读取 GitHub 分支 ${config.branch}。`;
+    fix = "如果仓库首页确认分支就是 main，那么通常不是分支名问题，而是 Netlify 里的 GITHUB_TOKEN 还不是最新 token，或 GitHub Token 的修改没有点 Update 保存。请在 GitHub Token 页面点绿色 Update；如果点过 Regenerate token，要把新 token 重新粘贴到 Netlify 的 GITHUB_TOKEN，并重新部署。";
   } else if (status === 409) {
     friendly = "GitHub 上的分支刚刚被别人或另一次保存更新了。";
     fix = "刷新后台，重新读取最新内容后再保存。";
