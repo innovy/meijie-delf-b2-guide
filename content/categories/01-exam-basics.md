@@ -1,5 +1,5 @@
 ---
 title: "考试认知"
 slug: "exam-basics"
-order: 1
+order: 3
 ---
