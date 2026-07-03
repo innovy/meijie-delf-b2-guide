@@ -1,12 +1,13 @@
 ---
 title: "考试结构与评分"
-slug: format-scoring
+slug: "format-scoring"
 author: "妹姐"
+categoryId: "exam-basics"
 category: "考试认知"
 order: 2
 summary: "理解四项考试、分数线、最低单项要求和 B2 对考生的真实要求。"
-tags: [考试结构, 评分, 分数线, 听力, 阅读]
-aliases: [考试结构与评分, 考试结构, 评分, 分数]
+tags: ["考试结构", "评分", "分数线", "听力", "阅读"]
+aliases: ["考试结构与评分", "考试结构", "评分", "分数"]
 ---
 
 ## 四项能力
