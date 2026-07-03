@@ -46,27 +46,33 @@
       "sourceFile": "content/categories/04-skills.md"
     },
     {
+      "id": "category-1783073473877",
+      "title": "考试介绍篇",
+      "order": 2,
+      "sourceFile": "content/categories/02-category-1783073473877.md"
+    },
+    {
       "id": "process",
       "title": "考试流程",
-      "order": 2,
+      "order": 3,
       "sourceFile": "content/categories/02-process.md"
     },
     {
       "id": "exam-basics",
       "title": "考试认知",
-      "order": 3,
+      "order": 4,
       "sourceFile": "content/categories/01-exam-basics.md"
     },
     {
       "id": "strategy",
       "title": "备考策略",
-      "order": 4,
+      "order": 5,
       "sourceFile": "content/categories/03-strategy.md"
     },
     {
       "id": "site-management",
       "title": "站点管理",
-      "order": 5,
+      "order": 6,
       "sourceFile": "content/categories/05-site-management.md"
     }
   ],
@@ -76,7 +82,7 @@
       "title": "写作",
       "slug": "writing",
       "categoryId": "skills",
-      "order": 5,
+      "order": 1,
       "author": "妹姐",
       "summary": "B2 写作的核心不是模板，而是用清楚的结构完成一篇有立场的正式文本。",
       "tags": [
@@ -99,7 +105,7 @@
       "title": "口语",
       "slug": "speaking",
       "categoryId": "skills",
-      "order": 6,
+      "order": 3,
       "author": "妹姐",
       "summary": "B2 口语要把短文读成问题，把问题变成立场，再用结构和互动撑住讨论。",
       "tags": [
@@ -120,8 +126,8 @@
       "id": "delf-dalf",
       "title": "DELF DALF 究竟有什么用？一文看懂其含金量与价值",
       "slug": "delf-dalf",
-      "categoryId": "skills",
-      "order": 7,
+      "categoryId": "category-1783073473877",
+      "order": 2,
       "author": "妹姐",
       "summary": "一、DELF DALF到底是什么？ DELF (Diplôme d'Études en Langue Française) 和 DALF (Diplôme Approfondi de...",
       "tags": [
@@ -132,7 +138,7 @@
         "DELF DALF 究竟有什么用？一文看懂其含金量与价值"
       ],
       "body": "### **一、DELF-DALF到底是什么？**\n\nDELF (Diplôme d'Études en Langue Française) 和 DALF (Diplôme Approfondi de Langue Française) 是由法国教育部颁发的官方法语文凭。\n\nDELF包括A1、A2、B1、B2四个级别，DALF包括C1、C2两个级别，与欧洲语言共同参考框架 (CEFR) 完全对应。\n\n\n### **二、含金量来自哪里？**\n\n1. **法国教育部官方文凭**\n\n很多语言考试本质上属于标准化语言测试 (tests)，例如 TEF、TCF、雅思 (IELTS) 等。\n\n而 DELF-DALF 是法国教育部设立并授权颁发的国家文凭。\n\n[法国国际教育中心 (France Éducation International)](https://www.france-education-international.fr/en/hub/diplomes-tests?langue=en&utm_source=chatgpt.com) 的原话是：\n\nLe DELF et le DALF sont des « diplômes officiels délivrés par le ministère de l'Éducation nationale ».\n\n\n1. **终身有效（Valid for life）**\n\n« Ce diplôme est valable à vie. »\n\n文凭一经获得，终身有效。这是 DELF-DALF 最大的优势之一。\n\n\n1. **全球认可**\n\n法国国际教育中心将其定义为：\n\n« Ce diplôme est reconnu dans le monde entier. »\n\nDELF-DALF 在全球范围内广受认可，包括法国、加拿大法语区、比利时、瑞士法语区、非洲法语国家、国际企业等。\n\n\n### **三、DELF B2 的实际用途**\n\n\n## **①留学**\n\n[法国国际教育中心](https://www.france-education-international.fr/en/hub/diplomes-tests?langue=en&utm_source=chatgpt.com)的官方页面写道：\n\n« Selon le niveau passé, le DELF peut faciliter l’accès à l’université en France, en Europe ou dans un pays francophone et dans certaines grandes écoles. »\n\n“根据所获得的等级，DELF 可以帮助考生进入法国、欧洲或其他法语国家的大学，以及部分高等专业学院。”\n\n\n许多法国大学要求申请者提供 B2 或 C1 水平的法语能力证明。\n\n对于绝大多数法语学习者而言，DELF B2 是申请法国高校最重要的一张“入场券”。达到 B2 后，已经能够满足多数本科项目和不少硕士项目的语言要求；而 DALF C1 则会在竞争激烈或语言要求较高的专业申请中更具优势。\n\n\n## **②求职**\n\n« Selon le niveau passé, le DELF peut valoriser un curriculum vitae (CV), et permettre d’obtenir un emploi plus facilement dans une entreprise où la langue parlée est le français. »\n\n“根据取得的等级不同，DELF证书能够为简历增值，并提高在法语工作环境中获得职位的机会。”\n\n对于法企、中法合作机构、国际组织以及涉法岗位，DELF-DALF 是认可度最高的法语能力证明之一。\n\n\n## **③移民**\n\n许多法语国家的移民项目会要求提供法语成绩。虽然加拿大移民体系通常更常见的是 TEF Canada 或 TCF Canada，但 DELF-DALF 仍然被广泛视为法语能力的官方证明。\n\n\n## **总结：**\n\nDELF-DALF 不是普通的语言测试，而是法国教育部颁发的官方法语文凭。它与欧洲语言共同参考框架（CEFR）完全对应，在全球范围内受到广泛认可，并且终身有效。无论是留学、求职还是证明自身法语水平，DELF-DALF 都是最受认可的法语认证。",
-      "sourceFile": "content/07-delf-dalf.md"
+      "sourceFile": "content/02-delf-dalf.md"
     },
     {
       "id": "registration-day",
