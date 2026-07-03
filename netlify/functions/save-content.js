@@ -9,9 +9,12 @@ const MAX_ASSET_BYTES = 8 * 1024 * 1024;
 
 exports.handler = async function handler(event) {
   try {
-    if (event.method === "GET") return await checkSetup(event);
-    if (event.method === "POST") return await saveContent(event);
-    return json(405, { ok: false, error: "这里只接受 GET 体检和 POST 保存请求。" });
+    const method = String(event.httpMethod || event.method || "").toUpperCase();
+    if (method === "OPTIONS") return json(204, { ok: true, message: "预检通过。" });
+    if (method === "HEAD") return head(204);
+    if (method === "GET") return await checkSetup(event);
+    if (method === "POST") return await saveContent(event);
+    return json(405, { ok: false, error: `这里只接受 GET 体检和 POST 保存请求。当前收到的是 ${method || "未知"}。` });
   } catch (error) {
     return json(error.statusCode || 500, publicError(error));
   }
@@ -787,5 +790,15 @@ function json(statusCode, body) {
       "Cache-Control": "no-store",
     },
     body: JSON.stringify(body),
+  };
+}
+
+function head(statusCode) {
+  return {
+    statusCode,
+    headers: {
+      "Cache-Control": "no-store",
+    },
+    body: "",
   };
 }
