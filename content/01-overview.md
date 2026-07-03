@@ -1,12 +1,13 @@
 ---
 title: "DELF B2考试总览"
-slug: delf-b2-overview
+slug: "delf-b2-overview"
 author: "妹姐"
+categoryId: "exam-basics"
 category: "考试认知"
 order: 1
 summary: "快速理解 DELF B2 是什么、适合谁、能解决什么问题，以及为什么要把它当作一个项目来准备。"
-tags: [DELF B2, CECRL, 考试总览, 法语考试]
-aliases: [DELF B2, DELF B2考试, B2考试]
+tags: ["DELF B2", "CECRL", "考试总览", "法语考试"]
+aliases: ["DELF B2", "DELF B2考试", "B2考试"]
 ---
 
 ## 它是什么
