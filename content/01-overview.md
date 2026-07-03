@@ -10,7 +10,7 @@ tags: ["DELF B2", "CECRL", "考试总览", "法语考试"]
 aliases: ["DELF B2", "DELF B2考试", "B2考试"]
 ---
 
-## 它是什么答疑个信号
+## 它是什么继续班尼戈
 
 DELF 是法国国民教育部颁发的法语水平文凭，面向非法语母语者。France Education international 的官方说明中提到，DELF tout public 对应 CECRL 的 A1、A2、B1、B2 四个独立等级，考试评估听、读、写、说四项沟通能力。
 
